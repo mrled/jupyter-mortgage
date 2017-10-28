@@ -112,7 +112,7 @@ class Loan(object):
         htmlstr += "<th>Balance</th>"
         htmlstr += "<th>Overpayment</th>"
         htmlstr += "<th>Remaining principal</th>"
-        htmlstr += "</tr>"
+        htmlstr += "</tr> "
 
         htmlstr += "<tr>"
         htmlstr += "<td>Initial loan amount</td>"
@@ -121,7 +121,7 @@ class Loan(object):
         htmlstr += "<td></td>"
         htmlstr += "<td></td>"
         htmlstr += f"<td>{dollar(self.principal)}</td>"
-        htmlstr += "</tr>"
+        htmlstr += "</tr> "
 
         for month in self.schedule():
             htmlstr += "<tr>"
@@ -131,7 +131,7 @@ class Loan(object):
             htmlstr += f"<td>{dollar(month.balancepmt)}</td>"
             htmlstr += f"<td>{dollar(month.overpmt)}</td>"
             htmlstr += f"<td>{dollar(month.principal)}</td>"
-            htmlstr += "</tr>"
+            htmlstr += "</tr> "
 
         htmlstr += "</table>"
 
