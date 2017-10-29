@@ -20,6 +20,12 @@ He was not impressed:
 
 But still. Here we are.
 
+## Requirements
+
+- Python3
+- Jupyter
+- The Jupyter widgets extension, which can be installed with `jupyter nbextension install --py widgetsnbextension --user`
+
 ## Roadmap
 
 OK, I don't actually have a roadmap, but here are a few things I would like to support in the future:

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Mortgage calculations"""
 
 import collections
@@ -14,125 +16,133 @@ def dollar(amount):
     """
     return '${:,.2f}'.format(amount)
 
-class Loan(object):
-    """A loan"""
+def monthlyrate(apryearly):
+    """The monthly rate, as calculated from the yearly APR
 
-    overpayments = ()
+    I'm not honestly clear on what this *is*,
+    or the difference betweenit and the "monthly APR" below,
+    or if I'm even using the right terms for these,
+    but it's required for the way my existing spreadsheet
+    calculates principal balance after overpayment
+    """
+    return apryearly / MONTHS_IN_YEAR
 
-    MonthInSchedule = collections.namedtuple('MonthInSchedule', ['index', 'interestpmt', 'balancepmt', 'overpmt', 'principal'])
+def aprmonthly(apryearly):
+    """The monthly APR, as calculated from the yearly APR"""
+    return apryearly / MONTHS_IN_YEAR / 100
 
-    def __init__(self, principal, apryearly, months, overpayment=0):
-        """Initialize a loan
+# https://en.wikipedia.org/wiki/Mortgage_calculator#Monthly_payment_formula
+def monthly_payment(apryearly, principal, term):
+    """The monthly mortgage payment amount
 
-        principal:  total amount of the loan
-        apryearly:  yearly APR of the loan,
-                    probably the number from a mortgage broker,
-                    such as 3.5% or 8%
-        months:     term length of the loan in months
-        addtlpay:   an additional amount to apply to the loan principal
-                    *every month*
-        """
-        self.principal = principal
-        self.apryearly = apryearly
-        self.months = months
-        self.monthly_overpayment = overpayment
-        self.overpayments = [overpayment for _ in range(self.months)]
+    apryearly:  yearly APR of the loan
+    principal:  total amount of the loan
+    term:       loan term in months
+    """
+    mapr = aprmonthly(apryearly)
+    return mapr * principal / (1 - (1 + mapr)**(-term))
 
-    @property
-    def monthlyrate(self):
-        """The monthly rate, as calculated from the yearly APR
+# Use the actual formula
+# I haven't figured out a way to incorporate overpayments into the formula
+# https://en.wikipedia.org/wiki/Mortgage_calculator#Monthly_payment_formula
+def balance_after(apryearly, principal, term, month):
+    """The principal balance after N months of on-time patyments of *only* the monthly_payment
 
-        I'm not honestly clear on what this *is*,
-        or the difference betweenit and the "monthly APR" below,
-        or if I'm even using the right terms for these,
-        but it's required for the way my existing spreadsheet
-        calculates principal balance after overpayment
-        """
-        return self.apryearly / MONTHS_IN_YEAR
+    apryearly:  yearly APR of the loan
+    principal:  total amount of the loan
+    term:       loan term in months
+    month:      the month to calculate from
+    """
+    mapr = aprmonthly(apryearly)
+    mpay = monthly_payment(apryearly, principal, term)
+    return (1 + mapr)**month * principal - ((1 + mapr)**month - 1) / mapr * mpay
 
-    @property
-    def aprmonthly(self):
-        """The monthly APR, as calculated from the yearly APR"""
-        return self.apryearly / MONTHS_IN_YEAR / 100
+# A type to represent a month's payment and its result
+MonthInSchedule = collections.namedtuple('MonthInSchedule', ['index', 'interestpmt', 'balancepmt', 'overpmt', 'principal'])
 
-    # https://en.wikipedia.org/wiki/Mortgage_calculator#Monthly_payment_formula
-    @property
-    def monthly_payment(self):
-        """The monthly mortgage payment amount"""
-        return self.aprmonthly * self.principal / (1 - (1 + self.aprmonthly)**(-self.months))
+# Rather than using the formula to calculate principal balance,
+# do it by brute-force
+# (I guess if I remembered calculus better,
+# I'd be able to use a calculus formula instead)
+# Incorporates overpayments
+def schedule(apryearly, principal, term, overpayments=[]):
+    """A schedule of payments, including overpayments
 
-    # Use the actual formula
-    # I haven't figured out a way to incorporate overpayments into the formula
-    # https://en.wikipedia.org/wiki/Mortgage_calculator#Monthly_payment_formula
-    def balance_after(self, monthidx):
-        """The principal balance after N months of on-time patyments of *only* the monthly_payment
+    apryearly:      yearly APR of the loan
+    principal:      total amount of the loan
+    term:           loan term in months
+    overpayments:   array of overpayment amounts for each month in the term
+    """
+    mapr = aprmonthly(apryearly)
+    mpay = monthly_payment(apryearly, principal, term)
+    monthidx = 0
+    while principal > 0:
+        interestpmt = principal * mapr
+        balancepmt = mpay - interestpmt
+        try:
+            overpmt = overpayments[monthidx]
+        except IndexError:
+            overpmt = 0
+        principal = principal - balancepmt - overpmt
 
-        monthidx:   the month to calculate from
-        """
-        return (1 + self.aprmonthly)**monthidx * self.principal - ((1 + self.aprmonthly)**monthidx - 1) / self.aprmonthly * self.monthly_payment
+        yield MonthInSchedule(
+            index=monthidx,
+            interestpmt=interestpmt,
+            balancepmt=balancepmt,
+            overpmt=overpmt,
+            principal=principal)
 
-    # Rather than using the formula to calculate principal balance,
-    # do it by brute-force
-    # (I guess if I remembered calculus better,
-    # I'd be able to use a calculus formula instead)
-    # Incorporates overpayments
-    def schedule(self):
-        """A schedule of payments, including overpayments"""
-        principal = self.principal
-        monthidx = 0
-        while principal > 0:
-            interestpmt = principal * self.aprmonthly
-            balancepmt = self.monthly_payment - interestpmt
-            principal = principal - balancepmt - self.overpayments[monthidx]
+        monthidx += 1
 
-            yield self.MonthInSchedule(
-                index=monthidx,
-                interestpmt=interestpmt,
-                balancepmt=balancepmt,
-                overpmt=self.overpayments[monthidx],
-                principal=principal)
+def htmlschedule(apryearly, principal, term, overpayment=0):
+    """Create an HTML table of a loan schedule
 
-            monthidx += 1
+    apryearly:      yearly APR of the loan
+    principal:      total amount of the loan
+    term:           loan term in months
+    overpayment:    an extra amount to apply to *every* month's loan principal
+    """
 
-    def htmlschedule(self):
-        htmlstr  = "<h1>Mortgage amortization schedule</h1>"
-        htmlstr += "<p>"
-        htmlstr += f"Amortization schedule for a {self.principal} loan "
-        htmlstr += f"over {self.months} months "
-        htmlstr += f"at {self.apryearly}% interest, "
-        htmlstr += f"including a {dollar(self.monthly_overpayment)} overpayment each month."
-        htmlstr += "</p>"
+    mpay = monthly_payment(apryearly, principal, term)
 
-        htmlstr += "<table>"
+    htmlstr  = "<h1>Mortgage amortization schedule</h1>"
+    htmlstr += "<p>"
+    htmlstr += f"Amortization schedule for a {principal} loan "
+    htmlstr += f"over {term} months "
+    htmlstr += f"at {apryearly}% interest, "
+    htmlstr += f"including a {dollar(overpayment)} overpayment each month."
+    htmlstr += "</p>"
 
+    htmlstr += "<table>"
+
+    htmlstr += "<tr>"
+    htmlstr += "<th>Month</th>"
+    htmlstr += "<th>Regular payment</th>"
+    htmlstr += "<th>Interest</th>"
+    htmlstr += "<th>Balance</th>"
+    htmlstr += "<th>Overpayment</th>"
+    htmlstr += "<th>Remaining principal</th>"
+    htmlstr += "</tr> "
+
+    htmlstr += "<tr>"
+    htmlstr += "<td>Initial loan amount</td>"
+    htmlstr += "<td></td>"
+    htmlstr += "<td></td>"
+    htmlstr += "<td></td>"
+    htmlstr += "<td></td>"
+    htmlstr += f"<td>{dollar(principal)}</td>"
+    htmlstr += "</tr> "
+
+    for month in schedule(apryearly, principal, term, [overpayment for _ in range(term)]):
         htmlstr += "<tr>"
-        htmlstr += "<th>Month</th>"
-        htmlstr += "<th>Regular payment</th>"
-        htmlstr += "<th>Interest</th>"
-        htmlstr += "<th>Balance</th>"
-        htmlstr += "<th>Overpayment</th>"
-        htmlstr += "<th>Remaining principal</th>"
+        htmlstr += f"<td>{month.index}</td>"
+        htmlstr += f"<td>{dollar(mpay)}</td>"
+        htmlstr += f"<td>{dollar(month.interestpmt)}</td>"
+        htmlstr += f"<td>{dollar(month.balancepmt)}</td>"
+        htmlstr += f"<td>{dollar(month.overpmt)}</td>"
+        htmlstr += f"<td>{dollar(month.principal)}</td>"
         htmlstr += "</tr> "
 
-        htmlstr += "<tr>"
-        htmlstr += "<td>Initial loan amount</td>"
-        htmlstr += "<td></td>"
-        htmlstr += "<td></td>"
-        htmlstr += "<td></td>"
-        htmlstr += "<td></td>"
-        htmlstr += f"<td>{dollar(self.principal)}</td>"
-        htmlstr += "</tr> "
+    htmlstr += "</table>"
 
-        for month in self.schedule():
-            htmlstr += "<tr>"
-            htmlstr += f"<td>{month.index}</td>"
-            htmlstr += f"<td>{dollar(self.monthly_payment)}</td>"
-            htmlstr += f"<td>{dollar(month.interestpmt)}</td>"
-            htmlstr += f"<td>{dollar(month.balancepmt)}</td>"
-            htmlstr += f"<td>{dollar(month.overpmt)}</td>"
-            htmlstr += f"<td>{dollar(month.principal)}</td>"
-            htmlstr += "</tr> "
-
-        htmlstr += "</table>"
-
-        return htmlstr
+    return htmlstr
