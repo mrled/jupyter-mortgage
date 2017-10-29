@@ -20,11 +20,43 @@ He was not impressed:
 
 But still. Here we are.
 
-## Requirements
+## Requirements / installation
 
 - Python3
-- Jupyter
-- The Jupyter widgets extension, which can be installed with `jupyter nbextension install --py widgetsnbextension --user`
+- Python packages:
+    - Jupyter
+    - gmaps
+    - googlemaps
+- Jupyter packages:
+    - widgetsnbextension
+- A Google Maps API key ([create one here](https://console.developers.google.com/flows/enableapi?apiid=maps_backend,geocoding_backend,directions_backend,distance_matrix_backend,elevation_backend&keyType=CLIENT_SIDE&reusekey=true) for obtaining one)
+
+You should install Python3 using whatever is normal for your operating system, or directly from <https://python.org>. Once it's installed, you can install the remaining dependencies in a Python virtual environment:
+
+    python3 -m ensurepip
+    python3 -m pip install virtualenv
+    python3 -m virtualenv venv
+    . venv/bin/activate
+    pip install jupyter gmaps googlemaps
+    jupyter nbextension install --py widgetsnbextension --user
+    jupyter nbextension enable --py gmaps
+    jupyter nbextension enable --py widgetsnbextension
+
+# Running
+
+First, activate the virtual environment. This must be done once per shell, so if you're in the same shell session that you used to install the prereqs, you will not need to do this. That said, it doesn't hurt to do it more than once.
+
+    . venv/bin/activate
+
+Next, set an environment variable to hold your Google Maps API key:
+
+    export GOOGLE_API_KEY=AI...
+
+And then run Jupyter like normal:
+
+    jupyter notebook
+
+Finally, find the Jupyter notebook itself. Click on the `MortgageWorksheet.ipynb` file in the webpage that the previous step should have popped up.
 
 ## Roadmap
 
