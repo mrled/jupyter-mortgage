@@ -16,11 +16,32 @@ def htmlschedule():
         term = years * mortgage.MONTHS_IN_YEAR
         display(HTML(mortgage.htmlschedule(apryearly, principal, term, overpayment)))
 
+    desc_width = '10em'
+
+    AprWidget = ipywidgets.FloatText(
+        value=3.75,
+        description="APR",
+        style={'description_width': desc_width})
+    PrincipalWidget = ipywidgets.IntText(
+        value=250_000,
+        description="Loan amount",
+        style={'description_width': desc_width})
+    TermWidget = ipywidgets.Dropdown(
+        options=[15, 20, 25, 30],
+        value=30,
+        description="Loan term in years",
+        style={'description_width': desc_width})
+    OverpaymentWidget = ipywidgets.IntText(
+        value=0,
+        description="Monthly overpayment amount",
+        style={'description_width': desc_width})
+
     widget = ipywidgets.interactive(
         f,
-        apryearly=ipywidgets.FloatSlider(min=0.0, max=10.0, step=0.25, value=3.75),
-        principal=ipywidgets.IntSlider(min=0, max=1_000_000, step=5000, value=250_000),
-        years=ipywidgets.IntSlider(min=15, max=30, step=5, value=30),
-        overpayment=ipywidgets.IntSlider(min=0, max=5000, step=50, value=0))
+        apryearly=AprWidget,
+        principal=PrincipalWidget,
+        years=TermWidget,
+        overpayment=OverpaymentWidget)
+
     display(widget)
 
