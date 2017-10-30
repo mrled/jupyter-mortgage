@@ -36,10 +36,7 @@ from mortgageui import dollar
     %else:
         <th>Month</th>
     %endif
-    <th>Regular payment</th>
-    <th>Interest</th>
-    <th>Balance</th>
-    <th>Overpayment</th>
+    <th>Payment</th>
     <th>Remaining principal</th>
     <th>Value</th>
     <th>Equity</th>
@@ -48,9 +45,6 @@ from mortgageui import dollar
 
 <tr>
     <td>Initial loan amount</td>
-    <td></td>
-    <td></td>
-    <td></td>
     <td></td>
     <td>${dollar(principal)}</td>
     <td>${dollar(principal)}</td>
@@ -64,10 +58,15 @@ from mortgageui import dollar
 %for payment in loanpayments:
     <tr>
         <td>${payment.index}</td>
-        <td>${dollar(payment.totalpmt)}</td>
-        <td>${dollar(payment.interestpmt)}</td>
-        <td>${dollar(payment.balancepmt)}</td>
-        <td>${dollar(payment.overpmt)}</td>
+        <td>
+            <table>
+                <tr><th>Total Payment</th><th>${dollar(payment.totalpmt)}</th></tr>
+                <tr><td>Minimum Payment</td><td>${dollar(payment.balancepmt + payment.interestpmt)}</td></tr>
+                <tr><td>Balance</td><td>${dollar(payment.balancepmt)}</td></tr>
+                <tr><td>Interest</td><td>${dollar(payment.interestpmt)}</td></tr>
+                <tr><td>Overpayment</td><td>${dollar(payment.overpmt)}</td></tr>
+            </table>
+        </td>
         <td>${dollar(payment.principal)}</td>
         <td>${dollar(payment.value)}</td>
         <td>${dollar(payment.equity)}</td>
