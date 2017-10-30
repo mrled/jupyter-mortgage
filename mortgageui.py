@@ -21,10 +21,75 @@ import namedtupled
 import mortgage
 
 
-def htmlschedule():
+def dollar(amount):
+    """Return a string dollar amount from a float
+
+    For example, dollar(1926.2311831442486) => "$1,926.23"
+
+    We aren't too concerned about the lost accuracy;
+    this function should only be used for *display* values
+    """
+    return '${:,.2f}'.format(amount)
+
+
+def htmlschedule(apryearly, principal, term, overpayment=0):
+    """Create an HTML table of a loan schedule
+
+    apryearly:      yearly APR of the loan
+    principal:      total amount of the loan
+    term:           loan term in months
+    overpayment:    an extra amount to apply to *every* month's loan principal
+    """
+
+    htmlstr  = "<h1>Mortgage amortization schedule</h1>"
+    htmlstr += "<p>"
+    htmlstr += f"Amortization schedule for a {principal} loan "
+    htmlstr += f"over {term} months "
+    htmlstr += f"at {apryearly}% interest, "
+    htmlstr += f"including a {dollar(overpayment)} overpayment each month."
+    htmlstr += "</p>"
+
+    htmlstr += "<table>"
+
+    htmlstr += "<tr>"
+    htmlstr += "<th>Month</th>"
+    htmlstr += "<th>Regular payment</th>"
+    htmlstr += "<th>Interest</th>"
+    htmlstr += "<th>Balance</th>"
+    htmlstr += "<th>Overpayment</th>"
+    htmlstr += "<th>Remaining principal</th>"
+    htmlstr += "</tr> "
+
+    htmlstr += "<tr>"
+    htmlstr += "<td>Initial loan amount</td>"
+    htmlstr += "<td></td>"
+    htmlstr += "<td></td>"
+    htmlstr += "<td></td>"
+    htmlstr += "<td></td>"
+    htmlstr += f"<td>{dollar(principal)}</td>"
+    htmlstr += "</tr> "
+
+    for month in mortgage.schedule(apryearly, principal, term, [overpayment for _ in range(term)]):
+        htmlstr += "<tr>"
+        htmlstr += f"<td>{month.index}</td>"
+        htmlstr += f"<td>{dollar(month.totalpmt)}</td>"
+        htmlstr += f"<td>{dollar(month.interestpmt)}</td>"
+        htmlstr += f"<td>{dollar(month.balancepmt)}</td>"
+        htmlstr += f"<td>{dollar(month.overpmt)}</td>"
+        htmlstr += f"<td>{dollar(month.principal)}</td>"
+        htmlstr += "</tr> "
+
+    htmlstr += "</table>"
+
+    return htmlstr
+
+
+def schedule():
+    """Show a loan's mortgage schedule in a Jupyter notebook"""
+
     def f(apryearly, principal, years, overpayment):
         term = years * mortgage.MONTHS_IN_YEAR
-        display(HTML(mortgage.htmlschedule(apryearly, principal, term, overpayment)))
+        display(HTML(htmlschedule(apryearly, principal, term, overpayment)))
 
     desc_width = '10em'
 
@@ -57,6 +122,8 @@ def htmlschedule():
 
 
 def streetmap():
+    """Show a street map in a Jupyter notebook"""
+
     client = googlemaps.Client(key=os.environ["GOOGLE_API_KEY"])
     gmaps.configure(api_key=os.environ["GOOGLE_API_KEY"])
 
