@@ -22,7 +22,9 @@ But still. Here we are.
 
 ## Requirements / installation
 
-- Python3
+- [Python3](https://www.python.org/)
+- [Pandoc](http://pandoc.org/) (required for PDF generation from Jupyter)
+- [TeX Live](https://www.tug.org/texlive/) (required for PDF generation from Jupyter)
 - Python packages:
     - gmaps
     - googlemaps
@@ -33,7 +35,17 @@ But still. Here we are.
     - widgetsnbextension
 - A Google Maps API key ([create one here](https://console.developers.google.com/flows/enableapi?apiid=maps_backend,geocoding_backend,directions_backend,distance_matrix_backend,elevation_backend&keyType=CLIENT_SIDE&reusekey=true) for obtaining one)
 
-You should install Python3 using whatever is normal for your operating system, or directly from <https://python.org>. Once it's installed, you can install the remaining dependencies in a Python virtual environment:
+### Manual installation steps
+
+- [Python3](https://www.python.org/downloads/): install this via whatever is normal for your operating system, or directly from the official Python site.
+- [Pandoc](http://pandoc.org/installing.html): install this via the official installation instructions
+- [TeX Live](https://www.tug.org/texlive/acquire-netinstall.html): install this via the official installation instructions
+
+Now ensure that your `PATH` environment variable can find `python3` (possibly as `python`), and `pandoc`.
+
+### Automatically installing remaining packages
+
+Once those packages are installed, you can use Python and Jupyter to install the remaining dependencies in a Python virtual environment
 
     python3 -m ensurepip
     python3 -m pip install virtualenv
@@ -44,7 +56,7 @@ You should install Python3 using whatever is normal for your operating system, o
     jupyter nbextension enable --py gmaps
     jupyter nbextension enable --py widgetsnbextension
 
-# Running
+### Running
 
 First, activate the virtual environment. This must be done once per shell, so if you're in the same shell session that you used to install the prereqs, you will not need to do this. That said, it doesn't hurt to do it more than once.
 
