@@ -32,7 +32,7 @@ def dollar(amount):
     return '${:,.2f}'.format(amount)
 
 
-def htmlschedule(apryearly, principal, term, overpayment, loanpayments, yearly=False):
+def htmlschedule(apryearly, principal, term, overpayment, appreciation, loanpayments, yearly=False):
     """Create an HTML table of a loan schedule
 
     apryearly:      yearly APR of the loan
@@ -49,7 +49,8 @@ def htmlschedule(apryearly, principal, term, overpayment, loanpayments, yearly=F
     htmlstr += f"Amortization schedule for a <span>{dollar(principal)}</span> loan "
     htmlstr += f"over {term} months "
     htmlstr += f"at {apryearly}% interest, "
-    htmlstr += f"including a {dollar(overpayment)} overpayment each month."
+    htmlstr += f"including a {dollar(overpayment)} overpayment each month. "
+    htmlstr += f"Expect the property to appreciate {appreciation}% each year."
     htmlstr += "</p>"
 
     htmlstr += "<table>"
@@ -64,6 +65,8 @@ def htmlschedule(apryearly, principal, term, overpayment, loanpayments, yearly=F
     htmlstr += "<th>Balance</th>"
     htmlstr += "<th>Overpayment</th>"
     htmlstr += "<th>Remaining principal</th>"
+    htmlstr += "<th>Value</th>"
+    htmlstr += "<th>Equity</th>"
     htmlstr += "</tr> "
 
     htmlstr += "<tr>"
@@ -73,6 +76,8 @@ def htmlschedule(apryearly, principal, term, overpayment, loanpayments, yearly=F
     htmlstr += "<td></td>"
     htmlstr += "<td></td>"
     htmlstr += f"<td>{dollar(principal)}</td>"
+    htmlstr += f"<td>{dollar(principal)}</td>"
+    htmlstr += f"<td>{dollar(0)}</td>"
     htmlstr += "</tr> "
 
     for payment in loanpayments:
@@ -83,6 +88,8 @@ def htmlschedule(apryearly, principal, term, overpayment, loanpayments, yearly=F
         htmlstr += f"<td>{dollar(payment.balancepmt)}</td>"
         htmlstr += f"<td>{dollar(payment.overpmt)}</td>"
         htmlstr += f"<td>{dollar(payment.principal)}</td>"
+        htmlstr += f"<td>{dollar(payment.value)}</td>"
+        htmlstr += f"<td>{dollar(payment.equity)}</td>"
         htmlstr += "</tr> "
 
     htmlstr += "</table>"
@@ -93,16 +100,22 @@ def htmlschedule(apryearly, principal, term, overpayment, loanpayments, yearly=F
 def schedule():
     """Show a loan's mortgage schedule in a Jupyter notebook"""
 
-    def f(apryearly, principal, years, overpayment, period):
+    def f(apryearly, principal, years, overpayment, appreciation, period):
         term = years * mortgage.MONTHS_IN_YEAR
-        months = mortgage.schedule(apryearly, principal, term, [overpayment for _ in range(term)])
+        overpayments = [overpayment for _ in range(term)]
+        appreciationpct = appreciation / 100
+
+        months = mortgage.schedule(apryearly, principal, term, overpayments=overpayments, appreciation=appreciationpct)
+
         if period == "Monthly detail":
-            display(HTML(htmlschedule(apryearly, principal, term, overpayment, months)))
+            report = htmlschedule(apryearly, principal, term, overpayment, appreciation, months)
         elif period == "Yearly summary":
             years = mortgage.monthly2yearly_schedule(months)
-            display(HTML(htmlschedule(apryearly, principal, term, overpayment, years, yearly=True)))
+            report = htmlschedule(apryearly, principal, term, overpayment, appreciation, years, yearly=True)
         else:
             raise Exception(f"Invalid period: '{period}'")
+
+        display(HTML(report))
 
     desc_width = '10em'
 
@@ -123,6 +136,10 @@ def schedule():
         value=0,
         description="Monthly overpayment amount",
         style={'description_width': desc_width})
+    appreciation_widget = ipywidgets.FloatText(
+        value=0,
+        description="Yearly appreciation",
+        style={'description_width': desc_width})
     period_widget = ipywidgets.Dropdown(
         options=["Yearly summary", "Monthly detail"],
         description="Report type",
@@ -134,6 +151,7 @@ def schedule():
         principal=principal_widget,
         years=term_widget,
         overpayment=overpayment_widget,
+        appreciation=appreciation_widget,
         period=period_widget)
 
     display(widget)

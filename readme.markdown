@@ -68,8 +68,7 @@ OK, I don't actually have a roadmap, but here are a few things I would like to s
 - Estimate other expenditures and savings (utilities, saving for capex, etc)
 - Estimate closing costs
 - Track forced appreciation (aka spending money to improve property value, e.g. by remodeling)
-- Track estimated natural appreciation (e.g. allow an assumption that the property will appreciate by X%/year)
-- Record various property facts: location, historical rent in area, historical sell price in area, etc
+- Record various property facts: historical rent in area, historical sell price in area, etc
 - Calculate ROI after certain period of time (e.g. closing costs + mortgage payments vs cash when you sell)
 - Calculate COCROI (cash-on-cash ROI, aka the return on investment just off monthly cashflow, not including principal or appreciation)
 

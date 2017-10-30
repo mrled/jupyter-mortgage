@@ -60,14 +60,18 @@ class LoanPayment:
     balancepmt = 0
     overpmt = 0
     principal = 0
+    value = 0
+    equity = 0
 
-    def __init__(self, index=0, totalpmt=0, interestpmt=0, balancepmt=0, overpmt=0, principal=0):
+    def __init__(self, index=0, totalpmt=0, interestpmt=0, balancepmt=0, overpmt=0, principal=0, value=0, equity=0):
         self.index = index
         self.totalpmt = totalpmt
         self.interestpmt = interestpmt
         self.balancepmt = balancepmt
         self.overpmt = overpmt
         self.principal = principal
+        self.value = value
+        self.equity = equity
 
 
 # Rather than using the formula to calculate principal balance,
@@ -75,19 +79,21 @@ class LoanPayment:
 # (I guess if I remembered calculus better,
 # I'd be able to use a calculus formula instead)
 # Incorporates overpayments
-def schedule(apryearly, principal, term, overpayments=None):
+def schedule(apryearly, principal, term, overpayments=None, appreciation=0):
     """A schedule of payments, including overpayments
 
     apryearly:      yearly APR of the loan
     principal:      total amount of the loan
     term:           loan term in months
     overpayments:   array of overpayment amounts for each month in the term
+    appreciation:   appreciation in decimal value representing percent
     """
     logger = util.getlogger()
     overpayments = overpayments or []
     mapr = aprmonthly(apryearly)
     mpay = monthly_payment(apryearly, principal, term)
     monthidx = 0
+    value = principal
     while principal > 0:
         interestpmt = principal * mapr
         balancepmt = mpay - interestpmt
@@ -124,13 +130,19 @@ def schedule(apryearly, principal, term, overpayments=None):
             logger.info(f"schedule()[{monthidx}]: Paying normal amounts in non-final month")
             principal = principal - balancepmt - overpmt
 
+        if not monthidx == 0:
+            if monthidx % MONTHS_IN_YEAR == 0:
+                value = value * (1 + appreciation)
+
         yield LoanPayment(
             index=monthidx,
             totalpmt=interestpmt+balancepmt+overpmt,
             interestpmt=interestpmt,
             balancepmt=balancepmt,
             overpmt=overpmt,
-            principal=principal)
+            principal=principal,
+            value=value,
+            equity=value-principal)
 
         monthidx += 1
 
@@ -163,6 +175,10 @@ def monthly2yearly_schedule(months):
             year.balancepmt += month.balancepmt
             year.overpmt += month.overpmt
             # Subtracts:
-            year.principal -= month.balancepmt - month.overpmt
+            #year.principal -= month.balancepmt - month.overpmt
+            # Overwrites:
+            year.principal = month.principal
+            year.value = month.value
+            year.equity = month.equity
         idx += 1
     yield year
