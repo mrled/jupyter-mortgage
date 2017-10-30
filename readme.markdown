@@ -63,7 +63,6 @@ Finally, find the Jupyter notebook itself. Click on the `MortgageWorksheet.ipynb
 
 OK, I don't actually have a roadmap, but here are a few things I would like to support in the future:
 
-- Denote additional monthly payments
 - Denote additional one-time payments
 - Estimate other monthly expenses (mortgage insurance, homeowners insurance, etc)
 - Estimate other expenditures and savings (utilities, saving for capex, etc)

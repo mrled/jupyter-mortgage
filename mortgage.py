@@ -49,10 +49,26 @@ def balance_after(apryearly, principal, term, month):
     mpay = monthly_payment(apryearly, principal, term)
     return (1 + mapr)**month * principal - ((1 + mapr)**month - 1) / mapr * mpay
 
-# A type to represent a month's payment and its result
-MonthInSchedule = collections.namedtuple(
-    'MonthInSchedule',
-    ['index', 'totalpmt', 'interestpmt', 'balancepmt', 'overpmt', 'principal'])
+
+# Had to change this from a named tuple because a named tuple is immutable
+class LoanPayment:
+    """A single loan payment and its result"""
+
+    index = 0
+    totalpmt = 0
+    interestpmt = 0
+    balancepmt = 0
+    overpmt = 0
+    principal = 0
+
+    def __init__(self, index=0, totalpmt=0, interestpmt=0, balancepmt=0, overpmt=0, principal=0):
+        self.index = index
+        self.totalpmt = totalpmt
+        self.interestpmt = interestpmt
+        self.balancepmt = balancepmt
+        self.overpmt = overpmt
+        self.principal = principal
+
 
 # Rather than using the formula to calculate principal balance,
 # do it by brute-force
@@ -108,7 +124,7 @@ def schedule(apryearly, principal, term, overpayments=None):
             logger.info(f"schedule()[{monthidx}]: Paying normal amounts in non-final month")
             principal = principal - balancepmt - overpmt
 
-        yield MonthInSchedule(
+        yield LoanPayment(
             index=monthidx,
             totalpmt=interestpmt+balancepmt+overpmt,
             interestpmt=interestpmt,
@@ -117,3 +133,36 @@ def schedule(apryearly, principal, term, overpayments=None):
             principal=principal)
 
         monthidx += 1
+
+
+def monthly2yearly_schedule(months):
+    """Convert a monthly schedule to a yearly one
+
+    months: array of LoanPayment objects
+    """
+    year = None
+    idx = 0
+    for month in months:
+        if idx % MONTHS_IN_YEAR == 0:
+            if year:
+                yield year
+                newyearidx = year.index + 1
+            else:
+                newyearidx = 0
+            year = LoanPayment(
+                index=newyearidx,
+                totalpmt=month.totalpmt,
+                interestpmt=month.interestpmt,
+                balancepmt=month.balancepmt,
+                overpmt=month.overpmt,
+                principal=month.principal)
+        else:
+            # Adds:
+            year.totalpmt += month.totalpmt
+            year.interestpmt += month.interestpmt
+            year.balancepmt += month.balancepmt
+            year.overpmt += month.overpmt
+            # Subtracts:
+            year.principal -= month.balancepmt - month.overpmt
+        idx += 1
+    yield year
