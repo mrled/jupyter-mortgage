@@ -11,6 +11,8 @@ from IPython.display import (
 )
 import ipywidgets
 
+from mako.template import Template
+
 import gmaps
 import gmaps.datasets
 
@@ -32,71 +34,6 @@ def dollar(amount):
     return '${:,.2f}'.format(amount)
 
 
-def htmlschedule(apryearly, principal, term, overpayment, appreciation, loanpayments, yearly=False):
-    """Create an HTML table of a loan schedule
-
-    apryearly:      yearly APR of the loan
-    principal:      total amount of the loan
-    term:           loan term in months
-    overpayment:    an extra amount to apply to *every* month's loan principal
-    loanpayments:   array of LoanPayment objects
-    """
-
-    htmlstr  = "<h1>Mortgage amortization schedule</h1>"
-    htmlstr += "<p>"
-    # Not sure why I need the <span> here,
-    # but if I don't include it Jupyter does something really fucked up to my text
-    htmlstr += f"Amortization schedule for a <span>{dollar(principal)}</span> loan "
-    htmlstr += f"over {term} months "
-    htmlstr += f"at {apryearly}% interest, "
-    htmlstr += f"including a {dollar(overpayment)} overpayment each month. "
-    htmlstr += f"Expect the property to appreciate {appreciation}% each year."
-    htmlstr += "</p>"
-
-    htmlstr += "<table>"
-
-    htmlstr += "<tr>"
-    if yearly:
-        htmlstr += "<th>Year</th>"
-    else:
-        htmlstr += "<th>Month</th>"
-    htmlstr += "<th>Regular payment</th>"
-    htmlstr += "<th>Interest</th>"
-    htmlstr += "<th>Balance</th>"
-    htmlstr += "<th>Overpayment</th>"
-    htmlstr += "<th>Remaining principal</th>"
-    htmlstr += "<th>Value</th>"
-    htmlstr += "<th>Equity</th>"
-    htmlstr += "</tr> "
-
-    htmlstr += "<tr>"
-    htmlstr += "<td>Initial loan amount</td>"
-    htmlstr += "<td></td>"
-    htmlstr += "<td></td>"
-    htmlstr += "<td></td>"
-    htmlstr += "<td></td>"
-    htmlstr += f"<td>{dollar(principal)}</td>"
-    htmlstr += f"<td>{dollar(principal)}</td>"
-    htmlstr += f"<td>{dollar(0)}</td>"
-    htmlstr += "</tr> "
-
-    for payment in loanpayments:
-        htmlstr += "<tr>"
-        htmlstr += f"<td>{payment.index}</td>"
-        htmlstr += f"<td>{dollar(payment.totalpmt)}</td>"
-        htmlstr += f"<td>{dollar(payment.interestpmt)}</td>"
-        htmlstr += f"<td>{dollar(payment.balancepmt)}</td>"
-        htmlstr += f"<td>{dollar(payment.overpmt)}</td>"
-        htmlstr += f"<td>{dollar(payment.principal)}</td>"
-        htmlstr += f"<td>{dollar(payment.value)}</td>"
-        htmlstr += f"<td>{dollar(payment.equity)}</td>"
-        htmlstr += "</tr> "
-
-    htmlstr += "</table>"
-
-    return htmlstr
-
-
 def schedule():
     """Show a loan's mortgage schedule in a Jupyter notebook"""
 
@@ -106,16 +43,26 @@ def schedule():
         appreciationpct = appreciation / 100
 
         months = mortgage.schedule(apryearly, principal, term, overpayments=overpayments, appreciation=appreciationpct)
+        yearly = False
+
+        schedtempl = Template(filename='templ/schedule.mako')
 
         if period == "Monthly detail":
-            report = htmlschedule(apryearly, principal, term, overpayment, appreciation, months)
+            loanpayments = months
         elif period == "Yearly summary":
-            years = mortgage.monthly2yearly_schedule(months)
-            report = htmlschedule(apryearly, principal, term, overpayment, appreciation, years, yearly=True)
+            loanpayments = mortgage.monthly2yearly_schedule(months)
+            yearly = True
         else:
             raise Exception(f"Invalid period: '{period}'")
 
-        display(HTML(report))
+        display(HTML(schedtempl.render(
+            apryearly=apryearly,
+            principal=principal,
+            term=term,
+            overpayment=overpayment,
+            appreciation=appreciation,
+            loanpayments=loanpayments,
+            yearly=yearly)))
 
     desc_width = '10em'
 
@@ -196,7 +143,7 @@ def streetmap():
             coordinates = (
                 geocode.geometry.location.lat,
                 geocode.geometry.location.lng)
-            
+
             county = "UNKNOWN"
             neighborhood = "UNKNOWN"
             for component in geocode.address_components:
@@ -205,14 +152,12 @@ def streetmap():
                 elif "neighborhood" in component.types:
                     neighborhood = component.long_name
 
-            htmlstr  = "<h1>Property information</h1>"
-            htmlstr += "<table>"
-            htmlstr += f"<tr><th>Address:</th><td>{geocode.formatted_address}</td></tr>"
-            htmlstr += f"<tr><th>County:</th><td>{county}</td></tr>"
-            htmlstr += f"<tr><th>Neighborhood:</th><td>{neighborhood}</td></tr>"
-            htmlstr += f"<tr><th>Coordinates:</th><td>{coordinates}</td></tr>"
-            htmlstr += "</table>"
-            display(HTML(htmlstr))
+            templ = Template(filename='templ/propertyinfo.mako')
+            display(HTML(templ.render(
+                address=geocode.formatted_address,
+                county=county,
+                neighborhood=neighborhood,
+                coordinates=coordinates)))
 
             fig = gmaps.figure(center=coordinates, zoom_level=14)
 

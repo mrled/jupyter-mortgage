@@ -3,7 +3,7 @@
 It's a work-in-progress Jupyter notebook for mortgage calculations.
 
 I told Josiah I was doing this:
-    
+
 > Writing a mortgage calculator in a Jupyter notebook
 >
 > Which… might not be a great use of my time
@@ -24,9 +24,10 @@ But still. Here we are.
 
 - Python3
 - Python packages:
-    - Jupyter
     - gmaps
     - googlemaps
+    - jupyter
+    - mako
     - namedtupled
 - Jupyter packages:
     - widgetsnbextension
@@ -38,7 +39,7 @@ You should install Python3 using whatever is normal for your operating system, o
     python3 -m pip install virtualenv
     python3 -m virtualenv venv
     . venv/bin/activate
-    pip install jupyter gmaps googlemaps namedtupled
+    pip install jupyter gmaps googlemaps mako namedtupled
     jupyter nbextension install --py widgetsnbextension --user
     jupyter nbextension enable --py gmaps
     jupyter nbextension enable --py widgetsnbextension
@@ -74,4 +75,4 @@ OK, I don't actually have a roadmap, but here are a few things I would like to s
 
 Some really nice stuff might be:
 - Automatically retrieve historical data about rents/sale prices in the area (from where?)
-- Figure out a way to show ranges, e.g. if your mortgage broker gives you options varying in down payment size and 
+- Figure out a way to show ranges, e.g. if your mortgage broker gives you options varying in down payment size and
