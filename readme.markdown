@@ -27,6 +27,7 @@ But still. Here we are.
     - Jupyter
     - gmaps
     - googlemaps
+    - namedtupled
 - Jupyter packages:
     - widgetsnbextension
 - A Google Maps API key ([create one here](https://console.developers.google.com/flows/enableapi?apiid=maps_backend,geocoding_backend,directions_backend,distance_matrix_backend,elevation_backend&keyType=CLIENT_SIDE&reusekey=true) for obtaining one)
@@ -37,7 +38,7 @@ You should install Python3 using whatever is normal for your operating system, o
     python3 -m pip install virtualenv
     python3 -m virtualenv venv
     . venv/bin/activate
-    pip install jupyter gmaps googlemaps
+    pip install jupyter gmaps googlemaps namedtupled
     jupyter nbextension install --py widgetsnbextension --user
     jupyter nbextension enable --py gmaps
     jupyter nbextension enable --py widgetsnbextension
