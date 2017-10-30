@@ -62,8 +62,9 @@ class LoanPayment:
     principal = 0
     value = 0
     equity = 0
+    totalinterest = 0
 
-    def __init__(self, index=0, totalpmt=0, interestpmt=0, balancepmt=0, overpmt=0, principal=0, value=0, equity=0):
+    def __init__(self, index=0, totalpmt=0, interestpmt=0, balancepmt=0, overpmt=0, principal=0, value=0, equity=0, totalinterest=0):
         self.index = index
         self.totalpmt = totalpmt
         self.interestpmt = interestpmt
@@ -72,6 +73,7 @@ class LoanPayment:
         self.principal = principal
         self.value = value
         self.equity = equity
+        self.totalinterest = totalinterest
 
 
 # Rather than using the formula to calculate principal balance,
@@ -94,8 +96,10 @@ def schedule(apryearly, principal, term, overpayments=None, appreciation=0):
     mpay = monthly_payment(apryearly, principal, term)
     monthidx = 0
     value = principal
+    totalinterest = 0
     while principal > 0:
         interestpmt = principal * mapr
+        totalinterest += interestpmt
         balancepmt = mpay - interestpmt
         try:
             overpmt = overpayments[monthidx]
@@ -136,13 +140,14 @@ def schedule(apryearly, principal, term, overpayments=None, appreciation=0):
 
         yield LoanPayment(
             index=monthidx,
-            totalpmt=interestpmt+balancepmt+overpmt,
+            totalpmt=interestpmt + balancepmt + overpmt,
             interestpmt=interestpmt,
             balancepmt=balancepmt,
             overpmt=overpmt,
             principal=principal,
             value=value,
-            equity=value-principal)
+            equity=value - principal,
+            totalinterest=totalinterest)
 
         monthidx += 1
 
@@ -174,11 +179,10 @@ def monthly2yearly_schedule(months):
             year.interestpmt += month.interestpmt
             year.balancepmt += month.balancepmt
             year.overpmt += month.overpmt
-            # Subtracts:
-            #year.principal -= month.balancepmt - month.overpmt
             # Overwrites:
             year.principal = month.principal
             year.value = month.value
             year.equity = month.equity
+            year.totalinterest = month.totalinterest
         idx += 1
     yield year

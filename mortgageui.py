@@ -42,16 +42,14 @@ def schedule():
         overpayments = [overpayment for _ in range(term)]
         appreciationpct = appreciation / 100
 
-        months = mortgage.schedule(apryearly, principal, term, overpayments=overpayments, appreciation=appreciationpct)
-        yearly = False
+        months = [month for month in mortgage.schedule(apryearly, principal, term, overpayments=overpayments, appreciation=appreciationpct)]
 
         schedtempl = Template(filename='templ/schedule.mako')
 
         if period == "Monthly detail":
-            loanpayments = months
+            years = None
         elif period == "Yearly summary":
-            loanpayments = mortgage.monthly2yearly_schedule(months)
-            yearly = True
+            years = [year for year in mortgage.monthly2yearly_schedule(months)]
         else:
             raise Exception(f"Invalid period: '{period}'")
 
@@ -61,8 +59,8 @@ def schedule():
             term=term,
             overpayment=overpayment,
             appreciation=appreciation,
-            loanpayments=loanpayments,
-            yearly=yearly)))
+            monthlypayments=months,
+            yearlypayments=years)))
 
     desc_width = '10em'
 
@@ -80,11 +78,11 @@ def schedule():
         description="Loan term in years",
         style={'description_width': desc_width})
     overpayment_widget = ipywidgets.IntText(
-        value=0,
+        value=50,
         description="Monthly overpayment amount",
         style={'description_width': desc_width})
     appreciation_widget = ipywidgets.FloatText(
-        value=0,
+        value=0.5,
         description="Yearly appreciation",
         style={'description_width': desc_width})
     period_widget = ipywidgets.Dropdown(
