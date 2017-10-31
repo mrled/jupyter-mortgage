@@ -1,6 +1,6 @@
 <%page args="address, county, neighborhood, coordinates" />
 
-<h1>Property information</h1>
+<h2>Property information</h2>
 
 <table>
     <tr><th>Address:</th><td>${address}</td></tr>

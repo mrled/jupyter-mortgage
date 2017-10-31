@@ -41,10 +41,7 @@ def schedule():
         term = years * mortgage.MONTHS_IN_YEAR
         overpayments = [overpayment for _ in range(term)]
         appreciationpct = appreciation / 100
-
         months = [month for month in mortgage.schedule(apryearly, principal, term, overpayments=overpayments, appreciation=appreciationpct)]
-
-        schedtempl = Template(filename='templ/schedule.mako')
 
         if period == "Monthly detail":
             years = None
@@ -53,6 +50,7 @@ def schedule():
         else:
             raise Exception(f"Invalid period: '{period}'")
 
+        schedtempl = Template(filename='templ/schedule.mako')
         display(HTML(schedtempl.render(
             apryearly=apryearly,
             principal=principal,
@@ -174,3 +172,41 @@ def streetmap():
     ipywidgets.interact_manual(
         f,
         address=address_widget)
+
+
+def close():
+    """Show loan amounts and closing costs"""
+
+    def f(saleprice, loanapr, loanterm, propertytaxes):
+        costs = mortgage.IRONHARBOR_FHA_CLOSING_COSTS
+        result = mortgage.close(saleprice, loanapr, loanterm, propertytaxes, costs)
+
+        templ = Template(filename='templ/close.mako')
+        display(HTML(templ.render(closeresult=result)))
+
+    desc_width = '10em'
+
+    saleprice_widget = ipywidgets.FloatText(
+        value=250_000,
+        description="Sale price",
+        style={'description_width': desc_width})
+    apr_widget = ipywidgets.FloatText(
+        value=3.75,
+        description="APR",
+        style={'description_width': desc_width})
+    term_widget = ipywidgets.Dropdown(
+        options=[15, 20, 25, 30],
+        value=30,
+        description="Loan term in years",
+        style={'description_width': desc_width})
+    proptax_widget = ipywidgets.FloatText(
+        value=5500,
+        description="Yearly property taxes",
+        style={'description_width': desc_width})
+
+    ipywidgets.interact(
+        f,
+        saleprice=saleprice_widget,
+        loanapr=apr_widget,
+        loanterm=term_widget,
+        propertytaxes=proptax_widget)

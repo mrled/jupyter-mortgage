@@ -11,7 +11,7 @@ from mortgage import MONTHS_IN_YEAR, schedule
 from mortgageui import dollar
 %>
 
-<h1>Mortgage amortization schedule</h1>
+<h2>Mortgage amortization schedule</h2>
 
 <p>Amortization schedule for a <span>${dollar(principal)}</span> loan over ${term} months at ${apryearly}% interest.</p>
 

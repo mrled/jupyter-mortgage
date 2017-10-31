@@ -79,7 +79,6 @@ OK, I don't actually have a roadmap, but here are a few things I would like to s
 - Denote additional one-time payments
 - Estimate other monthly expenses (mortgage insurance, homeowners insurance, etc)
 - Estimate other expenditures and savings (utilities, saving for capex, etc)
-- Estimate closing costs
 - Track forced appreciation (aka spending money to improve property value, e.g. by remodeling)
 - Record various property facts: historical rent in area, historical sell price in area, etc
 - Calculate ROI after certain period of time (e.g. closing costs + mortgage payments vs cash when you sell)
