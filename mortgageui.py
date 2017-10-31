@@ -23,6 +23,9 @@ import namedtupled
 import mortgage
 
 
+WIDGET_DESC_WIDTH = '10em'
+
+
 def dollar(amount):
     """Return a string dollar amount from a float
 
@@ -37,67 +40,81 @@ def dollar(amount):
 def schedule():
     """Show a loan's mortgage schedule in a Jupyter notebook"""
 
-    def f(apryearly, principal, years, overpayment, appreciation, period):
+    def wrap_schedule(apryearly, principal, years, overpayment, appreciation):
+        """Show a loan's mortgage schedule in a Jupyter notebook"""
+
         term = years * mortgage.MONTHS_IN_YEAR
         overpayments = [overpayment for _ in range(term)]
         appreciationpct = appreciation / 100
         months = [month for month in mortgage.schedule(apryearly, principal, term, overpayments=overpayments, appreciation=appreciationpct)]
-
-        if period == "Monthly detail":
-            years = None
-        elif period == "Yearly summary":
-            years = [year for year in mortgage.monthly2yearly_schedule(months)]
-        else:
-            raise Exception(f"Invalid period: '{period}'")
-
+        years = [year for year in mortgage.monthly2yearly_schedule(months)]
         schedtempl = Template(filename='templ/schedule.mako')
-        display(HTML(schedtempl.render(
-            apryearly=apryearly,
-            principal=principal,
-            term=term,
-            overpayment=overpayment,
-            appreciation=appreciation,
-            monthlypayments=months,
-            yearlypayments=years)))
 
-    desc_width = '10em'
+        # Create new Output objects, and call display(HTML(...)) in them
+        # We do this because IPython.display.HTML() has nicer talbles
+        # than ipywidgets.HTML(), but only ipywidgets-type widgets can be put
+        # into an Accordion.
+        summaryout = ipywidgets.Output()
+        detailout = ipywidgets.Output()
+        with summaryout:
+            display(HTML(schedtempl.render(
+                apryearly=apryearly,
+                principal=principal,
+                term=term,
+                overpayment=overpayment,
+                appreciation=appreciation,
+                monthlypayments=months,
+                yearlypayments=years)))
+        with detailout:
+            display(HTML(schedtempl.render(
+                apryearly=apryearly,
+                principal=principal,
+                term=term,
+                overpayment=overpayment,
+                appreciation=appreciation,
+                monthlypayments=months,
+                yearlypayments=None)))
 
-    apr_widget = ipywidgets.FloatText(
-        value=3.75,
-        description="APR",
-        style={'description_width': desc_width})
-    principal_widget = ipywidgets.IntText(
-        value=250_000,
-        description="Loan amount",
-        style={'description_width': desc_width})
-    term_widget = ipywidgets.Dropdown(
-        options=[15, 20, 25, 30],
-        value=30,
-        description="Loan term in years",
-        style={'description_width': desc_width})
-    overpayment_widget = ipywidgets.IntText(
-        value=50,
-        description="Monthly overpayment amount",
-        style={'description_width': desc_width})
-    appreciation_widget = ipywidgets.FloatText(
-        value=0.5,
-        description="Yearly appreciation",
-        style={'description_width': desc_width})
-    period_widget = ipywidgets.Dropdown(
-        options=["Yearly summary", "Monthly detail"],
-        description="Report type",
-        style={'description_width': desc_width})
+        parentwidg = ipywidgets.Accordion()
+        parentwidg.children = [summaryout, detailout]
+        parentwidg.set_title(0, 'Yearly summary')
+        parentwidg.set_title(1, 'Monthly detail')
+        display(parentwidg)
 
-    widget = ipywidgets.interactive(
-        f,
-        apryearly=apr_widget,
-        principal=principal_widget,
-        years=term_widget,
-        overpayment=overpayment_widget,
-        appreciation=appreciation_widget,
-        period=period_widget)
-
-    display(widget)
+    ipywidgets.interact(
+        wrap_schedule,
+        apryearly=ipywidgets.BoundedFloatText(
+            value=3.75,
+            min=0.01,
+            step=0.25,
+            description="APR",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        principal=ipywidgets.BoundedIntText(
+            value=250_000,
+            min=1,
+            max=1_000_000_000,
+            step=1000,
+            description="Loan amount",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        years=ipywidgets.Dropdown(
+            options=[15, 20, 25, 30],
+            value=30,
+            description="Loan term in years",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        overpayment=ipywidgets.BoundedIntText(
+            value=50,
+            min=0,
+            max=1_000_000,
+            step=5,
+            description="Monthly overpayment amount",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        appreciation=ipywidgets.BoundedFloatText(
+            value=0.5,
+            min=-20.0,
+            max=20.0,
+            step=0.5,
+            description="Yearly appreciation",
+            style={'description_width': WIDGET_DESC_WIDTH}))#,
 
 
 def streetmap():
@@ -106,7 +123,8 @@ def streetmap():
     client = googlemaps.Client(key=os.environ["GOOGLE_API_KEY"])
     gmaps.configure(api_key=os.environ["GOOGLE_API_KEY"])
 
-    def f(address):
+    def wrap_streetmap(address):
+        """Show a streetmap"""
 
         for geocode_dict in client.geocode(address):
 
@@ -163,50 +181,50 @@ def streetmap():
 
             display(fig)
 
-    address_widget = ipywidgets.Text(
-        value="1600 Pennsylvania Ave SE, Washington, DC 20003",
-        description="Property address")
-
-    print("Enter an address, then click the 'Run Interact' button to show a map")
+    display(HTML("<p>Enter an address, then click the 'Run Interact' button to show a map</p>"))
 
     ipywidgets.interact_manual(
-        f,
-        address=address_widget)
+        wrap_streetmap,
+        address=ipywidgets.Text(
+            value="1600 Pennsylvania Ave SE, Washington, DC 20003",
+            description="Address"))
 
 
 def close():
     """Show loan amounts and closing costs"""
 
-    def f(saleprice, loanapr, loanterm, propertytaxes):
+    def wrap_close(saleprice, loanapr, loanterm, propertytaxes):
+        """Show loan amounts and closing costs"""
         costs = mortgage.IRONHARBOR_FHA_CLOSING_COSTS
         result = mortgage.close(saleprice, loanapr, loanterm, propertytaxes, costs)
 
         templ = Template(filename='templ/close.mako')
         display(HTML(templ.render(closeresult=result)))
 
-    desc_width = '10em'
-
-    saleprice_widget = ipywidgets.FloatText(
-        value=250_000,
-        description="Sale price",
-        style={'description_width': desc_width})
-    apr_widget = ipywidgets.FloatText(
-        value=3.75,
-        description="APR",
-        style={'description_width': desc_width})
-    term_widget = ipywidgets.Dropdown(
-        options=[15, 20, 25, 30],
-        value=30,
-        description="Loan term in years",
-        style={'description_width': desc_width})
-    proptax_widget = ipywidgets.FloatText(
-        value=5500,
-        description="Yearly property taxes",
-        style={'description_width': desc_width})
-
     ipywidgets.interact(
-        f,
-        saleprice=saleprice_widget,
-        loanapr=apr_widget,
-        loanterm=term_widget,
-        propertytaxes=proptax_widget)
+        wrap_close,
+        saleprice=ipywidgets.BoundedFloatText(
+            value=250_000,
+            min=1,
+            max=1_000_000_000,
+            step=1000,
+            description="Sale price",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        loanapr=ipywidgets.BoundedFloatText(
+            value=3.75,
+            min=0.01,
+            step=0.25,
+            description="APR",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        loanterm=ipywidgets.Dropdown(
+            options=[15, 20, 25, 30],
+            value=30,
+            description="Loan term in years",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        propertytaxes=ipywidgets.BoundedIntText(
+            value=5500,
+            min=0,
+            max=1_000_000,
+            step=5,
+            description="Yearly property taxes",
+            style={'description_width': WIDGET_DESC_WIDTH}))

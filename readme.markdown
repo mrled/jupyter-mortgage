@@ -41,7 +41,7 @@ But still. Here we are.
 - [Pandoc](http://pandoc.org/installing.html): install this via the official installation instructions
 - [TeX Live](https://www.tug.org/texlive/acquire-netinstall.html): install this via the official installation instructions
 
-Now ensure that your `PATH` environment variable can find `python3` (possibly as `python`), and `pandoc`.
+Now ensure that your `PATH` environment variable can find `python3` (possibly as `python`), `pandoc`, and the `TeX` binaries.
 
 ### Automatically installing remaining packages
 
@@ -83,6 +83,7 @@ OK, I don't actually have a roadmap, but here are a few things I would like to s
 - Record various property facts: historical rent in area, historical sell price in area, etc
 - Calculate ROI after certain period of time (e.g. closing costs + mortgage payments vs cash when you sell)
 - Calculate COCROI (cash-on-cash ROI, aka the return on investment just off monthly cashflow, not including principal or appreciation)
+- Could I use ipyleaflet for better maps experience?
 
 Some really nice stuff might be:
 - Automatically retrieve historical data about rents/sale prices in the area (from where?)
