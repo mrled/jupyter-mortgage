@@ -33,6 +33,9 @@ def dollar(amount):
 
     We aren't too concerned about the lost accuracy;
     this function should only be used for *display* values
+
+    NOTE: I'm not sure why, but I often find that if I don't wrap a dollar()
+    call in <span> tags, Jupyter does something really fucked up to my text
     """
     return '${:,.2f}'.format(amount)
 
@@ -108,9 +111,28 @@ def wrap_schedule(apryearly, principal, years, overpayment, appreciation):
     term = years * mortgage.MONTHS_IN_YEAR
     overpayments = [overpayment for _ in range(term)]
     appreciationpct = appreciation / 100
-    months = [month for month in mortgage.schedule(apryearly, principal, term, overpayments=overpayments, appreciation=appreciationpct)]
+
+    # Calculate the monthly payments for the mortgage schedule detail,
+    # yearly payments for the mortgage schedule summary
+    # and monthly payments with no overpayments for comparative analysis in prefacetempl
+    months = [month for month in mortgage.schedule(
+        apryearly, principal, term, overpayments=overpayments, appreciation=appreciationpct)]
+    months_no_over = [month for month in mortgage.schedule(
+        apryearly, principal, term, overpayments=None, appreciation=appreciationpct)]
     years = [year for year in mortgage.monthly2yearly_schedule(months)]
+
+    prefacetempl = Template(filename='templ/schedule_preface.mako')
     schedtempl = Template(filename='templ/schedule.mako')
+
+    # Display a preface / summary first
+    display(HTML(prefacetempl.render(
+        apryearly=apryearly,
+        principal=principal,
+        term=term,
+        overpayment=overpayment,
+        appreciation=appreciation,
+        monthlypayments=months,
+        monthlypayments_no_over=months_no_over)))
 
     # Create new Output objects, and call display(HTML(...)) in them
     # We do this because IPython.display.HTML() has nicer talbles
@@ -120,22 +142,14 @@ def wrap_schedule(apryearly, principal, years, overpayment, appreciation):
     detailout = ipywidgets.Output()
     with summaryout:
         display(HTML(schedtempl.render(
-            apryearly=apryearly,
             principal=principal,
-            term=term,
-            overpayment=overpayment,
-            appreciation=appreciation,
-            monthlypayments=months,
-            yearlypayments=years)))
+            loanpayments=years,
+            paymentinterval_name="Year")))
     with detailout:
         display(HTML(schedtempl.render(
-            apryearly=apryearly,
             principal=principal,
-            term=term,
-            overpayment=overpayment,
-            appreciation=appreciation,
-            monthlypayments=months,
-            yearlypayments=None)))
+            loanpayments=months,
+            paymentinterval_name="Month")))
 
     parentwidg = ipywidgets.Accordion()
     parentwidg.children = [summaryout, detailout]
@@ -286,5 +300,3 @@ def propertyinfo():
     #         value="",
     #         description="Address",
     #         style={'description_width': WIDGET_DESC_WIDTH}))
-
-
