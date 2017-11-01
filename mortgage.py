@@ -146,9 +146,8 @@ def schedule(apryearly, principal, term, overpayments=None, appreciation=0):
             logger.info(f"schedule()[{monthidx}]: Paying normal amounts in non-final month")
             principal = principal - balancepmt - overpmt
 
-        if monthidx != 0:
-            if monthidx % MONTHS_IN_YEAR == 0:
-                value = value * (1 + appreciation)
+        monthapprec = appreciation / MONTHS_IN_YEAR
+        value = value * (1 + monthapprec)
 
         yield LoanPayment(
             index=monthidx,
