@@ -20,6 +20,12 @@ He was not impressed:
 
 But still. Here we are.
 
+## Running online
+
+You can use [Binder](https://mybinder.org/) to run this notebook online. No installation required!
+
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/mrled/jupyter-mortgage/master)
+
 ## Requirements / installation
 
 - [Python3](https://www.python.org/)
