@@ -24,7 +24,7 @@ But still. Here we are.
 
 You can use [Binder](https://mybinder.org/) to run this notebook online. No installation required!
 
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/mrled/jupyter-mortgage/master)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/mrled/jupyter-mortgage/master?filepath=MortgageWorksheet.ipynb)
 
 ## Requirements / installation
 
