@@ -51,10 +51,11 @@ Once those packages are installed, you can use Python and Jupyter to install the
     python3 -m pip install virtualenv
     python3 -m virtualenv venv
     . venv/bin/activate
-    pip install jupyter gmaps googlemaps mako namedtupled
+    pip install jupyter gmaps googlemaps ipyleaflet mako namedtupled
     jupyter nbextension install --py widgetsnbextension --user
     jupyter nbextension enable --py gmaps
     jupyter nbextension enable --py widgetsnbextension
+    jupyter nbextension enable --py --sys-prefix ipyleaflet
 
 ### Running
 
