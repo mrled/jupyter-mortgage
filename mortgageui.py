@@ -15,6 +15,8 @@ from mako.template import Template
 
 import gmaps
 
+import ipyleaflet
+
 import mortgage
 import streetmap
 
@@ -69,7 +71,7 @@ def toggleinputcells():
 
     # Show title, input code toggle message, and input code toggle button
     display(HTML('''
-        <h1>Rental investment propety worksheet</h1>
+        <h2>Modifying this notebook</h2>
 
         <p>Input code for this notebook is by default hidden for easier reading.</p>
         <p>
@@ -154,12 +156,16 @@ def wrap_schedule(apryearly, principal, years, overpayment, appreciation):
     display(parentwidg)
 
 
-def wrap_streetmap(address):
+def wrap_streetmap(address, google_api_key):
     """Show a streetmap"""
 
-    gmaps.configure(api_key=os.environ["GOOGLE_API_KEY"])
-
-    geocodes = streetmap.geocode_google(address, os.environ["GOOGLE_API_KEY"])
+    if google_api_key != "":
+        gmaps.configure(api_key=google_api_key)
+        geocodes = streetmap.geocode_google(address, google_api_key)
+        display(HTML(f"<p>Google API key found - using Google maps</p>"))
+    else:
+        geocodes = streetmap.geocode_nominatim(address)
+        display(HTML(f"<p>Using OpenStreetMap for map data</p>"))
 
     if len(geocodes) < 1:
         display(HTML(f"<p>Could not find property at {address}</p>"))
@@ -181,29 +187,33 @@ def wrap_streetmap(address):
             coordinates=geocode.coordinates,
             propertyindex=propertyindex)))
 
-        fig = gmaps.figure(center=geocode.coordinates, zoom_level=14)
+        if google_api_key != "":
+            figure = gmaps.figure(center=geocode.coordinates, zoom_level=14)
+            # Drop a pin on the property location
+            figure.add_layer(
+                gmaps.marker_layer([geocode.coordinates]))
+        else:
+            figure = ipyleaflet.Map(center=geocode.coordinates, zoom=14)
+            marker = ipyleaflet.Marker(location=geocode.coordinates)
+            figure += marker
 
-        # Drop a pin on the property location
-        fig.add_layer(
-            gmaps.marker_layer([geocode.coordinates]))
-
-        display(fig)
+        display(figure)
 
 
 def propertyinfo():
     """Gather information about a property using Jupyter UI elements"""
 
-    def metawrapper(loanapr, saleprice, years, overpayment, appreciation, propertytaxes, address):
+    def metawrapper(loanapr, saleprice, years, overpayment, appreciation, propertytaxes, address, google_api_key):
         closed = wrap_close(saleprice, loanapr, years, propertytaxes)
         wrap_schedule(loanapr, closed.principal_total, years, overpayment, appreciation)
 
         display(HTML("<p>Some actions, such as showing a map, are not suited for live updates; to run them, enter the required information and then click 'Run Interact'.</p>"))
         ipywidgets.interact_manual(
             wrap_streetmap,
-            address=address)
+            address=address,
+            google_api_key=google_api_key)
 
-    def metawrapper_manual(address):
-        wrap_streetmap(address)
+    display(HTML(Template("templ/instructions.mako").render()))
 
     ipywidgets.interact(
         metawrapper,
@@ -249,12 +259,8 @@ def propertyinfo():
         address=ipywidgets.Text(
             value="1600 Pennsylvania Ave NW, Washington, DC 20500",
             description="Address",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        google_api_key=ipywidgets.Text(
+            value="",
+            description="Google API key",
             style={'description_width': WIDGET_DESC_WIDTH}))
-
-    # display(HTML("<p>Some actions, such as showing a map, are not suited for live updates; to run them, enter the required information and then click 'Run Interact'.</p>"))
-    # ipywidgets.interact_manual(
-    #     wrap_streetmap,
-    #     address=ipywidgets.Text(
-    #         value="",
-    #         description="Address",
-    #         style={'description_width': WIDGET_DESC_WIDTH}))

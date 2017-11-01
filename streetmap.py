@@ -27,7 +27,7 @@ class GeocodeResult():
 
 
 def geocode_nominatim(address):
-    uritempl = "http://nominatim.openstreetmap.org/search/{0}?format=json&addressdetails=1&extratags=1&namedetails=1"
+    uritempl = "http://nominatim.openstreetmap.org/search/{0}?format=json&addressdetails=1&extratags=1&namedetails=1&dedupe=1"
     uri = uritempl.format(urllib.parse.quote(address))
     with urllib.request.urlopen(uri) as resulthandle:
         httpresults = json.loads(resulthandle.read())
