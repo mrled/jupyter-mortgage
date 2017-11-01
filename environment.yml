@@ -1,0 +1,9 @@
+name: MortgageWorksheet
+dependencies:
+  - python=3.6
+  - pip:
+    - gmaps
+    - googlemaps
+    - ipyleaflet
+    - mako
+    - namedtupled
