@@ -373,7 +373,7 @@ def close(saleprice, loanapr, loanterm, propertytaxes, costs):
 
     saleprice       sale price for the property
     loanapr         loan APR
-    loanterm        loan term
+    loanterm        loan term in months
     propertytaxes   estimated property taxes
     costs           list of ClosingCost objects
     """

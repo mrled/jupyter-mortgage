@@ -1,6 +1,10 @@
-<%page args="address, county, neighborhood, coordinates" />
+<%page args="address, county, neighborhood, coordinates, propertyindex" />
 
-<h2>Property information</h2>
+%if propertyindex is not None:
+    <h2>Property ${propertyindex}</h2>
+%else:
+    <h2>Property information</h2>
+%endif
 
 <table>
     <tr><th>Address:</th><td>${address}</td></tr>
