@@ -1,4 +1,4 @@
-<h1>Rental investment propety worksheet</h1>
+<h2>Parameters</h2>
 
 <p>Hopefully most of the controls below are self-explanatory. Some notes:</p>
 <ul>
