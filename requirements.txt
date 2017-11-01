@@ -1,4 +1,5 @@
-gmapsgooglemaps
+gmaps
+googlemaps
 ipyleaflet
 mako
 namedtupled
