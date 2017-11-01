@@ -37,6 +37,53 @@ def dollar(amount):
     return '${:,.2f}'.format(amount)
 
 
+def disablecellscroll():
+    """Disable in-cell scrolling"""
+
+    display(HTML('''
+        <script>
+        IPython.OutputArea.prototype._should_scroll = function(lines) {
+            return false;
+        }
+        </script>
+        '''))
+
+
+def toggleinputcells():
+    """Enable toggling input cells"""
+
+    # Enable toggling display of input cells
+    display(HTML('''
+        <script>
+        show_inputs = true;
+        function toggleinputs() {
+            if (show_inputs){
+                $('div.input').hide();
+            } else {
+                $('div.input').show();
+            }
+            show_inputs = !show_inputs;
+        }
+        $(document).ready(toggleinputs);
+        </script>
+        '''))
+
+    # Show title, input code toggle message, and input code toggle button
+    display(HTML('''
+        <h1>Rental investment propety worksheet</h1>
+
+        <p>Input code for this notebook is by default hidden for easier reading.</p>
+        <p>
+            For simple inputs, you may not need to view the code;
+            you can change values like sale price and APR using the GUI widgets.
+            For more complex inputs, such as defining a new set of closing costs,
+            you will need to enable input code display, and create a list of closing costs in inline Python.
+        </p>
+        <p><button onclick="toggleinputs()">Toggle input code display</button></p>
+        <hr/>
+        '''))
+
+
 def schedule():
     """Show a loan's mortgage schedule in a Jupyter notebook"""
 
