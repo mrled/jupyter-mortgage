@@ -295,54 +295,52 @@ def propertyinfo():
 
     display(HTML(Template("templ/instructions.mako").render()))
 
-    widgets_box = ipywidgets.VBox()
-    display(widgets_box)
-
-    def hboxwidg(label, container, widget):
-        hbox = ipywidgets.HBox()
-        hbox.children = [ipywidgets.Label(label), widget]
-        container.children += (hbox,)
-        return widget
-
-    loanapr = hboxwidg("APR", widgets_box, ipywidgets.BoundedFloatText(
-        value=3.75,
-        min=0.01,
-        step=0.25))
-    saleprice = hboxwidg("Sale price", widgets_box, ipywidgets.BoundedFloatText(
-        value=250_000,
-        min=1,
-        max=1_000_000_000,
-        step=1000))
-    years = hboxwidg("Loan term in years", widgets_box, ipywidgets.Dropdown(
-        options=[15, 20, 25, 30],
-        value=30))
-    overpayment = hboxwidg("Monthly overpayment amount", widgets_box, ipywidgets.BoundedIntText(
-        value=50,
-        min=0,
-        max=1_000_000,
-        step=5))
-    appreciation = hboxwidg("Yearly appreciation", widgets_box, ipywidgets.BoundedFloatText(
-        value=0.5,
-        min=-20.0,
-        max=20.0,
-        step=0.5))
-    propertytaxes = hboxwidg("Yearly property taxes", widgets_box, ipywidgets.BoundedIntText(
-        value=5500,
-        min=0,
-        max=1_000_000,
-        step=5))
-    address = hboxwidg("Property address", widgets_box, ipywidgets.Text(
-        value="1600 Pennsylvania Ave NW, Washington, DC 20500"))
-    google_api_key = hboxwidg("Google API key (optional)", widgets_box, ipywidgets.Text(
-        value=""))
-
     ipywidgets.interact(
         metawrapper,
-        loanapr=loanapr,
-        saleprice=saleprice,
-        years=years,
-        overpayment=overpayment,
-        appreciation=appreciation,
-        propertytaxes=propertytaxes,
-        address=address,
-        google_api_key=google_api_key)
+        loanapr=ipywidgets.BoundedFloatText(
+            value=3.75,
+            min=0.01,
+            step=0.25,
+            description="APR",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        saleprice=ipywidgets.BoundedFloatText(
+            value=250_000,
+            min=1,
+            max=1_000_000_000,
+            step=1000,
+            description="Sale price",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        years=ipywidgets.Dropdown(
+            options=[15, 20, 25, 30],
+            value=30,
+            description="Loan term in years",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        overpayment=ipywidgets.BoundedIntText(
+            value=50,
+            min=0,
+            max=1_000_000,
+            step=5,
+            description="Monthly overpayment amount",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        appreciation=ipywidgets.BoundedFloatText(
+            value=0.5,
+            min=-20.0,
+            max=20.0,
+            step=0.5,
+            description="Yearly appreciation",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        propertytaxes=ipywidgets.BoundedIntText(
+            value=5500,
+            min=0,
+            max=1_000_000,
+            step=5,
+            description="Yearly property taxes",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        address=ipywidgets.Text(
+            value="1600 Pennsylvania Ave NW, Washington, DC 20500",
+            description="Address",
+            style={'description_width': WIDGET_DESC_WIDTH}),
+        google_api_key=ipywidgets.Text(
+            value="",
+            description="Google API key",
+            style={'description_width': WIDGET_DESC_WIDTH}))
