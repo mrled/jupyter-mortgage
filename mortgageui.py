@@ -157,23 +157,29 @@ def wrap_schedule(apryearly, principal, years, overpayment, appreciation):
 
 
 class StreetMapGlobalManager():
+    """Street map global manager"""
+
     progress_widget = None
     stopevent = None
-    output = None
+    container = None
+
     def stop(self):
+        """Stop execution"""
         if self.progress_widget is not None:
             self.progress_widget.close()
         if self.stopevent is not None:
             self.stopevent.set()
-        if self.output is not None:
-            self.output.close()
+        if self.container is not None:
+            self.container.close()
+
     def reset(self, progwidg):
+        """Stop and reset"""
         self.stop()
         self.stopevent = threading.Event()
         self.progress_widget = progwidg
-        self.output = ipywidgets.Output()
-        display(self.progress_widget)
-        display(self.output)
+        self.container = ipywidgets.VBox()
+        display(self.container)
+        self.container.children = [self.progress_widget]
 
 _STREET_MAP_GLOBALS = StreetMapGlobalManager()
 
@@ -191,11 +197,22 @@ def wrap_streetmap(address, google_api_key, timerlength=3.0):
     timerlength     number of seconds to wait before the street map is displayed
     """
 
-    def show_streetmap(address, google_api_key, displayarea):
+    def get_streetmap(address, google_api_key):
         """Show a streetmap"""
 
-        with displayarea:
+        # WARNING: widgets can NOT be displayed directly from a non-main thread!
+        # Ref: https://github.com/jupyter-widgets/ipywidgets/issues/1790
+        # Instead, we must create a container widget, and update its .children property
+        # to contain the items we wish to display
+        # To render HTML, we could place an ipywidgets.HTML() into the container, but that loses
+        # the normal Jupyter styling for HTML elements - things like tables don't look as nice
+        # We instead we render using IPython.display.display(HTML(...)), but we do so into an
+        # ipywidgets.Output() which we then add to the container widget's .children
 
+        container_children = []
+
+        preface_html_out = ipywidgets.Output()
+        with preface_html_out:
             if google_api_key != "":
                 gmaps.configure(api_key=google_api_key)
                 geocodes = streetmap.geocode_google(address, google_api_key)
@@ -207,16 +224,18 @@ def wrap_streetmap(address, google_api_key, timerlength=3.0):
             if len(geocodes) < 1:
                 display(HTML(f"<p>Could not find property at {address}</p>"))
             elif len(geocodes) > 1:
-                display(HTML(f"<p/><p style='font-size: 150%'>Multiple matches returned for {address}; all are displayed below:</p>"))
+                display(HTML(f"<p/><p style='font-size: 150%'>{len(geocodes)} matches returned for {address}; all are displayed below:</p>"))
 
-            for idx in range(len(geocodes)):
-                geocode = geocodes[idx]
+        container_children += [preface_html_out]
 
-                propertyindex = None
-                if len(geocodes) != 1:
-                    propertyindex = idx + 1
+        for idx, geocode in enumerate(geocodes):
+            propertyindex = None
+            if len(geocodes) != 1:
+                propertyindex = idx + 1
 
-                templ = Template(filename='templ/propertyinfo.mako')
+            property_html_out = ipywidgets.Output()
+            templ = Template(filename='templ/propertyinfo.mako')
+            with property_html_out:
                 display(HTML(templ.render(
                     address=geocode.displayname,
                     county=geocode.county,
@@ -224,19 +243,18 @@ def wrap_streetmap(address, google_api_key, timerlength=3.0):
                     coordinates=geocode.coordinates,
                     propertyindex=propertyindex)))
 
-                if google_api_key != "":
-                    figure = gmaps.figure(center=geocode.coordinates, zoom_level=14)
-                    # Drop a pin on the property location
-                    figure.add_layer(
-                        gmaps.marker_layer([geocode.coordinates]))
-                else:
-                    figure = ipyleaflet.Map(center=geocode.coordinates, zoom=14)
-                    marker = ipyleaflet.Marker(location=geocode.coordinates)
-                    figure += marker
+            if google_api_key != "":
+                property_figure = gmaps.figure(center=geocode.coordinates, zoom_level=14)
+                property_figure.add_layer(gmaps.marker_layer([geocode.coordinates]))
+            else:
+                property_figure = ipyleaflet.Map(center=geocode.coordinates, zoom=14)
+                property_figure += ipyleaflet.Marker(location=geocode.coordinates)
 
-                display(figure)
+            container_children += [property_html_out, property_figure]
 
-    def update_progress(timerlength, stopevent, progresswidget, displayarea, updateinterval=0.2):
+        return container_children
+
+    def streetmap_thread(address, google_api_key, timerlength, stopevent, progresswidget, container, updateinterval=0.2):
         """Update the streetmap progress widget"""
 
         # .wait() returns True when stopevent.set() is called from a different thread;
@@ -246,24 +264,24 @@ def wrap_streetmap(address, google_api_key, timerlength=3.0):
             progresswidget.value += updateinterval
             if progresswidget.value >= timerlength:
                 # If the stop event did not fire, then we can execute the map display function
-                nonlocal address, google_api_key
-                show_streetmap(address, google_api_key, displayarea)
+                container.children = get_streetmap(address, google_api_key)
                 break
 
         progresswidget.close()
 
     global _STREET_MAP_GLOBALS
-
     _STREET_MAP_GLOBALS.reset(ipywidgets.FloatProgress(
         description='Loading map...', value=0.0, min=0.0, max=timerlength))
 
     progress_thread = threading.Thread(
-        target=update_progress,
+        target=streetmap_thread,
         args=(
+            address,
+            google_api_key,
             timerlength,
             _STREET_MAP_GLOBALS.stopevent,
             _STREET_MAP_GLOBALS.progress_widget,
-            _STREET_MAP_GLOBALS.output))
+            _STREET_MAP_GLOBALS.container))
     progress_thread.start()
 
 
