@@ -4,18 +4,18 @@
 
 import collections
 import os
+import threading
+import time
 
 from IPython.display import (
     HTML,
     display,
 )
 import ipywidgets
-
-from mako.template import Template
+import ipyleaflet
 
 import gmaps
-
-import ipyleaflet
+from mako.template import Template
 
 import mortgage
 import streetmap
@@ -156,48 +156,103 @@ def wrap_schedule(apryearly, principal, years, overpayment, appreciation):
     display(parentwidg)
 
 
-def wrap_streetmap(address, google_api_key):
-    """Show a streetmap"""
+_STREETMAP_GLOBALS = {
+    'progress_widget': None,
+    'stopevent': None,
+}
 
-    if google_api_key != "":
-        gmaps.configure(api_key=google_api_key)
-        geocodes = streetmap.geocode_google(address, google_api_key)
-        display(HTML(f"<p>Google API key found - using Google maps</p>"))
-    else:
-        geocodes = streetmap.geocode_nominatim(address)
-        display(HTML(f"<p>Using OpenStreetMap for map data</p>"))
 
-    if len(geocodes) < 1:
-        display(HTML(f"<p>Could not find property at {address}</p>"))
-    elif len(geocodes) > 1:
-        display(HTML(f"<p/><p style='font-size: 150%'>Multiple matches returned for {address}; all are displayed below:</p>"))
+def wrap_streetmap(address, google_api_key, timerlength=3.0):
+    """Show a streetmap after a timer has elapsed
 
-    for idx in range(len(geocodes)):
-        geocode = geocodes[idx]
+    Every time this function is called, a global timer is started.
+    If this function is called again before the timer elapses, the timer is canceled and restarted.
+    When the timer does finally elapse, the street map is shown.
 
-        propertyindex = None
-        if len(geocodes) != 1:
-            propertyindex = idx + 1
+    address         location to display on the map
+    google_api_key  a valid Google API key, or None
+                    if the API key is valid, use Google maps; otherwise, use OpenStreetMaps
+    timerlength     number of seconds to wait before the street map is displayed
+    """
 
-        templ = Template(filename='templ/propertyinfo.mako')
-        display(HTML(templ.render(
-            address=geocode.displayname,
-            county=geocode.county,
-            neighborhood=geocode.neighborhood,
-            coordinates=geocode.coordinates,
-            propertyindex=propertyindex)))
+    def show_streetmap(address, google_api_key):
+        """Show a streetmap"""
 
         if google_api_key != "":
-            figure = gmaps.figure(center=geocode.coordinates, zoom_level=14)
-            # Drop a pin on the property location
-            figure.add_layer(
-                gmaps.marker_layer([geocode.coordinates]))
+            gmaps.configure(api_key=google_api_key)
+            geocodes = streetmap.geocode_google(address, google_api_key)
+            display(HTML(f"<p>Google API key found - using Google maps</p>"))
         else:
-            figure = ipyleaflet.Map(center=geocode.coordinates, zoom=14)
-            marker = ipyleaflet.Marker(location=geocode.coordinates)
-            figure += marker
+            geocodes = streetmap.geocode_nominatim(address)
+            display(HTML(f"<p>Using OpenStreetMap for map data</p>"))
 
-        display(figure)
+        if len(geocodes) < 1:
+            display(HTML(f"<p>Could not find property at {address}</p>"))
+        elif len(geocodes) > 1:
+            display(HTML(f"<p/><p style='font-size: 150%'>Multiple matches returned for {address}; all are displayed below:</p>"))
+
+        for idx in range(len(geocodes)):
+            geocode = geocodes[idx]
+
+            propertyindex = None
+            if len(geocodes) != 1:
+                propertyindex = idx + 1
+
+            templ = Template(filename='templ/propertyinfo.mako')
+            display(HTML(templ.render(
+                address=geocode.displayname,
+                county=geocode.county,
+                neighborhood=geocode.neighborhood,
+                coordinates=geocode.coordinates,
+                propertyindex=propertyindex)))
+
+            if google_api_key != "":
+                figure = gmaps.figure(center=geocode.coordinates, zoom_level=14)
+                # Drop a pin on the property location
+                figure.add_layer(
+                    gmaps.marker_layer([geocode.coordinates]))
+            else:
+                figure = ipyleaflet.Map(center=geocode.coordinates, zoom=14)
+                marker = ipyleaflet.Marker(location=geocode.coordinates)
+                figure += marker
+
+            display(figure)
+
+    def update_progress(timerlength, stopevent, progresswidget, updateinterval=0.2):
+        """Update the streetmap progress widget"""
+
+        # .wait() returns True when stopevent.set() is called from a different thread;
+        # until then, it will block until updateinterval elapses, at which point it returns False
+        while not stopevent.wait(updateinterval):
+
+            progresswidget.value += updateinterval
+            if progresswidget.value >= timerlength:
+                # If the stop event did not fire, then we can execute the map display function
+                nonlocal address, google_api_key
+                show_streetmap(address, google_api_key)
+                break
+
+        progresswidget.close()
+
+    global _STREETMAP_GLOBALS
+
+    if _STREETMAP_GLOBALS['stopevent'] is not None:
+        _STREETMAP_GLOBALS['stopevent'].set()
+    _STREETMAP_GLOBALS['stopevent'] = threading.Event()
+
+    if _STREETMAP_GLOBALS['progress_widget'] is not None:
+        _STREETMAP_GLOBALS['progress_widget'].close()
+    _STREETMAP_GLOBALS['progress_widget'] = ipywidgets.FloatProgress(
+        description='Loading map...', value=0.0, min=0.0, max=timerlength)
+    display(_STREETMAP_GLOBALS['progress_widget'])
+
+    progress_thread = threading.Thread(
+        target=update_progress,
+        args=(
+            timerlength,
+            _STREETMAP_GLOBALS['stopevent'],
+            _STREETMAP_GLOBALS['progress_widget']))
+    progress_thread.start()
 
 
 def propertyinfo():
@@ -206,12 +261,7 @@ def propertyinfo():
     def metawrapper(loanapr, saleprice, years, overpayment, appreciation, propertytaxes, address, google_api_key):
         closed = wrap_close(saleprice, loanapr, years, propertytaxes)
         wrap_schedule(loanapr, closed.principal_total, years, overpayment, appreciation)
-
-        display(HTML("<p>Some actions, such as showing a map, are not suited for live updates; to run them, enter the required information and then click 'Run Interact'.</p>"))
-        ipywidgets.interact_manual(
-            wrap_streetmap,
-            address=address,
-            google_api_key=google_api_key)
+        wrap_streetmap(address, google_api_key)
 
     display(HTML(Template("templ/instructions.mako").render()))
 
