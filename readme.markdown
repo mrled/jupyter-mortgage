@@ -90,7 +90,6 @@ OK, I don't actually have a roadmap, but here are a few things I would like to s
 - Record various property facts: historical rent in area, historical sell price in area, etc
 - Calculate ROI after certain period of time (e.g. closing costs + mortgage payments vs cash when you sell)
 - Calculate COCROI (cash-on-cash ROI, aka the return on investment just off monthly cashflow, not including principal or appreciation)
-- Could I use ipyleaflet for better maps experience?
 
 Some really nice stuff might be:
 - Automatically retrieve historical data about rents/sale prices in the area (from where?)
