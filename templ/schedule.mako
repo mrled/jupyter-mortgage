@@ -32,7 +32,7 @@ from mortgageui import dollar
 
 %for payment in loanpayments:
     <tr>
-        <td>${payment.index}</td>
+        <td>${payment.index + 1}</td>
         <td>${dollar(payment.totalpmt)}</td>
         <td>${dollar(payment.interestpmt)}</td>
         <td>${dollar(payment.balancepmt)}</td>
