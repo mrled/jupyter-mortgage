@@ -2,10 +2,7 @@
 
 """Jupyter wrappers for displaying mortgage information"""
 
-import collections
-import os
 import threading
-import time
 
 from IPython.display import (
     HTML,
@@ -36,6 +33,15 @@ def dollar(amount):
     call in <span> tags, Jupyter does something really fucked up to my text
     """
     return '${:,.2f}'.format(amount)
+
+
+def html_hbox(text, style):
+    """Create a styled HBox from a string containing HTML"""
+
+    hbox = ipywidgets.HBox()
+    hbox.children = [ipywidgets.HTML(text)]
+    hbox.box_style = style
+    return hbox
 
 
 def disablecellscroll():
@@ -216,15 +222,15 @@ def wrap_streetmap(address, google_api_key, timerlength=3.0):
             if google_api_key != "":
                 gmaps.configure(api_key=google_api_key)
                 geocodes = streetmap.geocode_google(address, google_api_key)
-                display(HTML(f"<p>Google API key found - using Google maps</p>"))
+                display(html_hbox("Google API key found - using Google maps", "info"))
             else:
                 geocodes = streetmap.geocode_nominatim(address)
-                display(HTML(f"<p>Using OpenStreetMap for map data</p>"))
+                display(html_hbox("Using OpenStreetMap for map data", "info"))
 
             if len(geocodes) < 1:
-                display(HTML(f"<p>Could not find property at {address}</p>"))
+                display(html_hbox(f"Could not find property at {address}", "danger"))
             elif len(geocodes) > 1:
-                display(HTML(f"<p/><p style='font-size: 150%'>{len(geocodes)} matches returned for {address}; all are displayed below:</p>"))
+                display(html_hbox(f"{len(geocodes)} matches returned for {address}; all are displayed below", "warning"))
 
         container_children += [preface_html_out]
 
