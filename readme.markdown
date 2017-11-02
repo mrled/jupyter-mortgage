@@ -95,3 +95,5 @@ OK, I don't actually have a roadmap, but here are a few things I would like to s
 Some really nice stuff might be:
 - Automatically retrieve historical data about rents/sale prices in the area (from where?)
 - Figure out a way to show ranges, e.g. if your mortgage broker gives you options varying in down payment size and
+- Maybe something like this could help? https://www.housecanary.com/product-analytics-api#pricing-calculator
+- Or perhaps this? https://developer.onboard-apis.com/pricing
