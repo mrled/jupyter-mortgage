@@ -244,7 +244,13 @@ def wrap_streetmap(address, google_api_key, timerlength=3.0):
         _STREETMAP_GLOBALS['progress_widget'].close()
     _STREETMAP_GLOBALS['progress_widget'] = ipywidgets.FloatProgress(
         description='Loading map...', value=0.0, min=0.0, max=timerlength)
-    display(_STREETMAP_GLOBALS['progress_widget'])
+
+    # DO NOT DISPLAY ANYTHING IN THIS FUNCTION
+    # This means we cannot display the progress widget :(
+    # Filed a bug here: https://github.com/jupyter-widgets/ipywidgets/issues/1790
+    # TODO: when that bug gets fixed, revisit this
+
+    #display(_STREETMAP_GLOBALS['progress_widget'])
 
     progress_thread = threading.Thread(
         target=update_progress,
