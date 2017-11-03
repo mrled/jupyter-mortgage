@@ -190,7 +190,7 @@ class StreetMapGlobalManager():
 _STREET_MAP_GLOBALS = StreetMapGlobalManager()
 
 
-def wrap_streetmap(address, google_api_key, timerlength=3.0):
+def wrap_streetmap(address, google_api_key, timerlength=2.0):
     """Show a streetmap after a timer has elapsed
 
     Every time this function is called, a global timer is started.
@@ -215,10 +215,15 @@ def wrap_streetmap(address, google_api_key, timerlength=3.0):
         # We instead we render using IPython.display.display(HTML(...)), but we do so into an
         # ipywidgets.Output() which we then add to the container widget's .children
 
+        # NOTE: display(HTML(...)) and display(ipywidgets.HTML(...)) intermixed because it lets me
+        # be lazy about styling and have it mostly look ok
+
         container_children = []
 
         preface_html_out = ipywidgets.Output()
         with preface_html_out:
+            display(HTML(f"<h2>Map & property information</h2>"))
+
             if google_api_key != "":
                 gmaps.configure(api_key=google_api_key)
                 geocodes = streetmap.geocode_google(address, google_api_key)
@@ -235,19 +240,48 @@ def wrap_streetmap(address, google_api_key, timerlength=3.0):
         container_children += [preface_html_out]
 
         for idx, geocode in enumerate(geocodes):
-            propertyindex = None
-            if len(geocodes) != 1:
-                propertyindex = idx + 1
 
-            property_html_out = ipywidgets.Output()
-            templ = Template(filename='templ/propertyinfo.mako')
-            with property_html_out:
-                display(HTML(templ.render(
-                    address=geocode.displayname,
-                    county=geocode.county,
-                    neighborhood=geocode.neighborhood,
-                    coordinates=geocode.coordinates,
-                    propertyindex=propertyindex)))
+            property_header = ipywidgets.Output()
+            with property_header:
+                if len(geocodes) != 1:
+                    display(HTML(f"<h3>Property {idx + 1}</h3>"))
+                else:
+                    display(HTML("<h3>Property information</h3>"))
+                display(HTML(f"<p><em>{geocode.displayname}</em></p>"))
+
+            property_info = ipywidgets.Box()
+            property_info.layout = ipywidgets.Layout(
+                display='flex',
+                flex_flow='column',
+                align_items='stretch',
+                width='20em')
+
+            prop_info_child_layout = ipywidgets.Layout(
+                display='flex',
+                flex_flow='row',
+                justify_content='space-between')
+
+            property_info.children = (
+                ipywidgets.Box(
+                    children=(
+                        ipywidgets.Label("County:"),
+                        ipywidgets.Label(geocode.county)),
+                    layout=prop_info_child_layout),
+                ipywidgets.Box(
+                    children=(
+                        ipywidgets.Label("Neighborhood:"),
+                        ipywidgets.Label(geocode.neighborhood)),
+                    layout=prop_info_child_layout),
+                ipywidgets.Box(
+                    children=(
+                        ipywidgets.Label("Latitude:"),
+                        ipywidgets.Label(str(geocode.coordinates[0]))),
+                    layout=prop_info_child_layout),
+                ipywidgets.Box(
+                    children=(
+                        ipywidgets.Label("Longitude:"),
+                        ipywidgets.Label(str(geocode.coordinates[1]))),
+                    layout=prop_info_child_layout))
 
             if google_api_key != "":
                 property_figure = gmaps.figure(center=geocode.coordinates, zoom_level=14)
@@ -256,11 +290,18 @@ def wrap_streetmap(address, google_api_key, timerlength=3.0):
                 property_figure = ipyleaflet.Map(center=geocode.coordinates, zoom=14)
                 property_figure += ipyleaflet.Marker(location=geocode.coordinates)
 
-            container_children += [property_html_out, property_figure]
+            container_children += [property_header, property_info, property_figure]
 
         return container_children
 
-    def streetmap_thread(address, google_api_key, timerlength, stopevent, progresswidget, container, updateinterval=0.2):
+    def streetmap_thread(
+            address,
+            google_api_key,
+            timerlength,
+            stopevent,
+            progresswidget,
+            container,
+            updateinterval=0.2):
         """Update the streetmap progress widget"""
 
         # .wait() returns True when stopevent.set() is called from a different thread;
@@ -323,9 +364,9 @@ def propertyinfo():
         box.children = [ipywidgets.Label(label), widget]
         container.children += (box,)
         box.layout = ipywidgets.Layout(
-                display='flex',
-                flex_flow='row',
-                justify_content='space-between')
+            display='flex',
+            flex_flow='row',
+            justify_content='space-between')
         return widget
 
     loanapr = boxwidg("APR", widgets_box, ipywidgets.BoundedFloatText(
