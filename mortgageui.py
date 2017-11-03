@@ -294,61 +294,80 @@ def wrap_streetmap(address, google_api_key, timerlength=3.0):
 def propertyinfo():
     """Gather information about a property using Jupyter UI elements"""
 
-    def metawrapper(loanapr, saleprice, years, overpayment, appreciation, propertytaxes, address, google_api_key):
+    def metawrapper(
+            loanapr,
+            saleprice,
+            years,
+            overpayment,
+            appreciation,
+            propertytaxes,
+            address,
+            google_api_key):
+        """Gather information about a property"""
         closed = wrap_close(saleprice, loanapr, years, propertytaxes)
         wrap_schedule(loanapr, closed.principal_total, years, overpayment, appreciation)
         wrap_streetmap(address, google_api_key)
 
     display(HTML(Template("templ/instructions.mako").render()))
 
-    widgets_box = ipywidgets.VBox()
-    display(widgets_box)
+    widgets_box = ipywidgets.Box(layout=ipywidgets.Layout(
+        display='flex',
+        flex_flow='column',
+        #border='solid 2px',
+        align_items='stretch',
+        width='70%'))
 
-    def hboxwidg(label, container, widget):
-        hbox = ipywidgets.HBox()
-        hbox.children = [ipywidgets.Label(label), widget]
-        container.children += (hbox,)
+    def boxwidg(label, container, widget):
+        """Helper function for widget-adding boilerplate"""
+        box = ipywidgets.Box()
+        box.children = [ipywidgets.Label(label), widget]
+        container.children += (box,)
+        box.layout = ipywidgets.Layout(
+                display='flex',
+                flex_flow='row',
+                justify_content='space-between')
         return widget
 
-    loanapr = hboxwidg("APR", widgets_box, ipywidgets.BoundedFloatText(
+    loanapr = boxwidg("APR", widgets_box, ipywidgets.BoundedFloatText(
         value=3.75,
         min=0.01,
         step=0.25))
-    saleprice = hboxwidg("Sale price", widgets_box, ipywidgets.BoundedFloatText(
+    saleprice = boxwidg("Sale price", widgets_box, ipywidgets.BoundedFloatText(
         value=250_000,
         min=1,
         max=1_000_000_000,
         step=1000))
-    years = hboxwidg("Loan term in years", widgets_box, ipywidgets.Dropdown(
+    years = boxwidg("Loan term in years", widgets_box, ipywidgets.Dropdown(
         options=[15, 20, 25, 30],
         value=30))
-    overpayment = hboxwidg("Monthly overpayment amount", widgets_box, ipywidgets.BoundedIntText(
+    overpayment = boxwidg("Monthly overpayment amount", widgets_box, ipywidgets.BoundedIntText(
         value=50,
         min=0,
         max=1_000_000,
         step=5))
-    appreciation = hboxwidg("Yearly appreciation", widgets_box, ipywidgets.BoundedFloatText(
+    appreciation = boxwidg("Yearly appreciation", widgets_box, ipywidgets.BoundedFloatText(
         value=0.5,
         min=-20.0,
         max=20.0,
         step=0.5))
-    propertytaxes = hboxwidg("Yearly property taxes", widgets_box, ipywidgets.BoundedIntText(
+    propertytaxes = boxwidg("Yearly property taxes", widgets_box, ipywidgets.BoundedIntText(
         value=5500,
         min=0,
         max=1_000_000,
         step=5))
-    address = hboxwidg("Property address", widgets_box, ipywidgets.Text(
+    address = boxwidg("Property address", widgets_box, ipywidgets.Text(
         value="1600 Pennsylvania Ave NW, Washington, DC 20500"))
-    google_api_key = hboxwidg("Google API key (optional)", widgets_box, ipywidgets.Text(
+    google_api_key = boxwidg("Google API key (optional)", widgets_box, ipywidgets.Text(
         value=""))
 
-    ipywidgets.interact(
-        metawrapper,
-        loanapr=loanapr,
-        saleprice=saleprice,
-        years=years,
-        overpayment=overpayment,
-        appreciation=appreciation,
-        propertytaxes=propertytaxes,
-        address=address,
-        google_api_key=google_api_key)
+    output = ipywidgets.interactive_output(metawrapper, {
+        'loanapr': loanapr,
+        'saleprice': saleprice,
+        'years': years,
+        'overpayment': overpayment,
+        'appreciation': appreciation,
+        'propertytaxes': propertytaxes,
+        'address': address,
+        'google_api_key': google_api_key})
+
+    display(widgets_box, output)
