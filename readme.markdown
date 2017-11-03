@@ -96,3 +96,9 @@ Some really nice stuff might be:
 - Figure out a way to show ranges, e.g. if your mortgage broker gives you options varying in down payment size and
 - Maybe something like this could help? https://www.housecanary.com/product-analytics-api#pricing-calculator
 - Or perhaps this? https://developer.onboard-apis.com/pricing
+- This looks good, and is free: https://www.zillow.com/howto/api/GetDeepSearchResults.htm
+- Calculating exact property tax might be doable from this: https://comptroller.texas.gov/taxes/property-tax/rates/index.php
+  however I don't know how to determine all the special districts that a property is part of
+- This is for regular people, but has the same problem: https://tax-office.traviscountytx.gov/property-tax-estimator
+- These pages might have info? http://www.txcip.org/tac/census/CountyProfiles.php
+  for instance if I can figure out how to get this page for other counties: http://www.txcip.org/tac/census/districthist.php?FIPS=48439
