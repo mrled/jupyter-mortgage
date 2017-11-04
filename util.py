@@ -2,10 +2,11 @@
 
 """Utilities for jupyter-mortgage"""
 
-import logging
 import threading
 
 import ipywidgets
+
+from log import LOG as log
 
 
 class DelayedExecutor():
@@ -61,7 +62,9 @@ class DelayedExecutor():
         self.stopevent.set()
         if self.thread is not None:
             # block until self.thread terminates (for self.timerinterval secs or shorter)
+            log.info("Stopping old thread...")
             self.thread.join()
+            log.info("Old thread stopped")
         self.stopevent.clear()
 
         self.progresswidget.value = 0.0
@@ -100,6 +103,8 @@ class DelayedExecutor():
 
             self.progresswidget.value += timerinterval
             if self.progresswidget.value >= timerlength:
+                log.info("Stop event did not fire - calling action()")
+                self.stopevent.set() # Stop the loop
                 # If the stop event did not fire,
                 # then we can execute the map display function
                 self.container.children = (self.thread_output_container,)
@@ -150,17 +155,3 @@ def label_widget(label, container, widget):
         flex_flow='row',
         justify_content='space-between')
     return widget
-
-
-def getlogger():
-    """Get a logger
-
-    This function basically just exists so I don't pollute the global
-    namespace with conhandler. Lol.
-    """
-    log = logging.getLogger('jupyter-mortgage')
-    log.setLevel(logging.WARNING)
-    conhandler = logging.StreamHandler()
-    conhandler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-    log.addHandler(conhandler)
-    return log

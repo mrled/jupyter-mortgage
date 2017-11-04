@@ -6,6 +6,7 @@ import copy
 from enum import Enum, auto
 
 import util
+from log import LOG as log
 
 MONTHS_IN_YEAR = 12
 DAYS_IN_MONTH_APPROX = 30
@@ -102,7 +103,6 @@ def schedule(apryearly, principal, term, overpayments=None, appreciation=0):
     overpayments:   array of overpayment amounts for each month in the term
     appreciation:   appreciation in decimal value representing percent
     """
-    logger = util.getlogger()
     overpayments = overpayments or []
     mapr = aprmonthly(apryearly)
     mpay = monthly_payment(apryearly, principal, term)
@@ -120,30 +120,30 @@ def schedule(apryearly, principal, term, overpayments=None, appreciation=0):
 
         if principal <= 0:
             # Break before the yield so we don't get empty lines
-            logger.info(f"schedule()[{monthidx}]: Principal {principal} is <= 0 in final month")
+            log.info(f"schedule()[{monthidx}]: Principal {principal} is <= 0 in final month")
             break
         elif principal < 0.01:
             # Also break if the principal is less than a cent
             # This prevents a weird payment that looks like it's for $0,
             # but actually is a rounded-down fraction of a cent
-            logger.info(f"schedule()[{monthidx}]: Ignoring remaining principal of {principal} because it is a fraction of a cent in final month")
+            log.info(f"schedule()[{monthidx}]: Ignoring remaining principal of {principal} because it is a fraction of a cent in final month")
             break
         elif principal - balancepmt - overpmt <= 0:
             # Paying the normal amount will result in overpaying in the final month
             # Handle this by adjusting the balancepmt and overpmt
             if principal - balancepmt > 0:
-                logger.info(f"schedule()[{monthidx}]: Truncating overpayment to {overpmt} in final month")
+                log.info(f"schedule()[{monthidx}]: Truncating overpayment to {overpmt} in final month")
                 overpmt = principal - balancepmt
                 principal = 0
             elif balancepmt > principal:
-                logger.info(f"schedule()[{monthidx}]: Truncating balance payment to {balancepmt} in final month")
+                log.info(f"schedule()[{monthidx}]: Truncating balance payment to {balancepmt} in final month")
                 overpmt = 0
                 balancepmt = principal
                 principal = 0
             else:
                 raise Exception("This should not happen")
         else:
-            logger.info(f"schedule()[{monthidx}]: Paying normal amounts in non-final month")
+            log.info(f"schedule()[{monthidx}]: Paying normal amounts in non-final month")
             principal = principal - balancepmt - overpmt
 
         monthapprec = appreciation / MONTHS_IN_YEAR
@@ -346,8 +346,7 @@ class CloseResult:
 
     def apply(self, cost):
         """Add a ClosingCost"""
-        logger = util.getlogger()
-        logger.info(f"Closing cost: {cost}")
+        log.info(f"Closing cost: {cost}")
 
         if cost.paytype == CCPayType.PRINCIPAL:
             self.principal.append(cost)
