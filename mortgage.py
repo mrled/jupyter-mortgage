@@ -85,6 +85,8 @@ def schedule(interestrate, value, principal, term, overpayments=None, appreciati
     term            loan term in months
     overpayments    array of overpayment amounts for each month in the term
     appreciation    appreciation in decimal value representing percent
+
+    yield           LoanPayment objects
     """
     overpayments = overpayments or []
     mpay = monthly_payment(interestrate, principal, term)
@@ -180,6 +182,101 @@ def monthly2yearly_schedule(months):
             year.totalinterest = month.totalinterest
         idx += 1
     yield year
+
+
+class MCCalcType(Enum):
+    """Determines how the amount of the MonthlyCost is calculated
+
+    DOLLAR_AMOUNT           a raw dollar amount
+    SALE_FRACTION           a percentage of the sale price
+    PRINCIPAL_FRACTION      a percentage of the loan
+    PROPERTY_TAX_FRACTION   a percentage of the first year of property taxes
+    """
+    DOLLAR_AMOUNT = auto()
+    SALE_FRACTION = auto()
+    PRINCIPAL_FRACTION = auto()
+    PROPERTY_TAX_FRACTION = auto()
+
+
+class MonthlyCost():
+    """A single monthly cost line item
+
+    (All monthly costs are fees;
+    monthly costs do not include mortgage payments of principal and interest)
+
+    Properties:
+    label:          an arbitrary text label
+    value           the value to be paid, expressed in dollars
+    calc            how the value amount is calculated
+                    for DOLLAR_AMOUNT, this is empty; for other calculation
+                    types, it may be a percentage or something else; see
+                    CCCalcType for more information
+    calctype        how the value is to be interpreted
+                    should be a CCCalcType
+    """
+
+    def __init__(
+            self,
+            label=None,
+            value=None,
+            calc=None,
+            calctype=MCCalcType.DOLLAR_AMOUNT):
+        self.label = label
+        self.value = value
+        self.calc = calc
+        self.calctype = calctype
+
+    def __str__(self):
+        return f"{self.label} - {self.value}"
+
+
+IRONHARBOR_FHA_MONTHLY_COSTS = [
+    MonthlyCost(
+        label="Mortgage insurance",
+        calc=0.85,
+        calctype=MCCalcType.PRINCIPAL_FRACTION)
+]
+
+
+def monthly_expenses(months, costs):
+    """Calculate monthly expenses
+
+    months  iterable of LoanPayment
+    costs   list of MonthlyCost objects
+    """
+
+    # Copy all costs, in case they are used elsewhere
+    costs = copy.deepcopy(costs)
+
+    for month in months:
+
+        payment = []
+
+        for cost in costs:
+
+            # First, check our inputs
+            if cost.calctype == MCCalcType.DOLLAR_AMOUNT and cost.value is None:
+                raise Exception(
+                    f"The {cost.label} MonthlyCost calctype is DOLLAR_AMOUNT, "
+                    "but with an empty value property")
+            elif cost.calctype != MCCalcType.DOLLAR_AMOUNT and cost.calc is None:
+                raise Exception(
+                    f"The {cost.label} MonthlyCost calctype is {cost.calctype}, "
+                    "but with an empty calc property")
+
+            # Now calculate what can be calculated now
+            # Don't calculate LOAN_FRACTION or INTEREST_MONTHS calctypes here,
+            # because any PRINCIPAL paytypes will affect their value
+            if cost.calctype == MCCalcType.DOLLAR_AMOUNT:
+                payment.append(cost)
+            if cost.calctype == MCCalcType.PRINCIPAL_FRACTION:
+                cost.value = month.principal * util.percent2decimal(cost.calc)
+                log.info(f"Calculating monthy expense '{cost.label}' to be {cost.value}'")
+                payment.append(cost)
+            else:
+                raise NotImplementedError()
+
+        yield payment
 
 
 class CCCalcType(Enum):

@@ -13,6 +13,7 @@ from mako.template import Template
 import mortgage
 import streetmap
 import util
+from log import LOG as log
 
 
 def dollar(amount):
@@ -148,6 +149,20 @@ def wrap_schedule(interestrate, value, principal, years, overpayment, appreciati
     parentwidg.set_title(1, 'Monthly detail')
     display(parentwidg)
 
+    return months
+
+
+def wrap_monthly_expenses(schedule, costs):
+    months = [month for month in mortgage.monthly_expenses(schedule, costs)]
+    htmlstr = "<table>"
+    for midx, month in enumerate(months):
+        htmlstr += f"<tr><th colspan='2'>Month {midx + 1}</th></tr>"
+        for expense in month:
+            log.info(f"Calculating expense: '{expense}'")
+            htmlstr += f"<tr><td>{expense.label}</td><td>{expense.value}</td></tr>"
+    htmlstr += "</table>"
+    display(HTML(htmlstr))
+
 
 def get_displayable_geocode(geocode, title):
     """Retrieve display()-able streetmap and property information for a list of geocodes
@@ -244,8 +259,10 @@ def propertyinfo():
         closed = wrap_close(saleprice, interestrate, years, propertytaxes)
 
         # TODO: currently assuming sale price is value; allow changing to something else
-        wrap_schedule(
+        months = wrap_schedule(
             interestrate, saleprice, closed.principal_total, years, overpayment, appreciation)
+
+        wrap_monthly_expenses(months, mortgage.IRONHARBOR_FHA_MONTHLY_COSTS)
 
         global street_map_executor  # pylint: disable=W0603,C0103
         streetmap_container = ipywidgets.Box()
