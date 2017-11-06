@@ -4,6 +4,7 @@
 
 import threading
 
+from IPython.display import display
 import ipywidgets
 
 from log import LOG as log
@@ -109,6 +110,21 @@ class DelayedExecutor():
                 log.info("Sent stop event from within timer() - all done")
 
         self.progbar_container.children = ()
+
+
+class OutputChildren(list):
+    """Helper class for building a tuple that can be added to an ipywidgets.Box.children"""
+
+    def display(self, displayable):
+        """Display an object to a new ipywidgets.Output(), and add that output to self"""
+        output = ipywidgets.Output()
+        with output:
+            display(displayable)
+        self.append(output)
+
+    def tuple(self):
+        """Convert the internal list to a tuple, before adding to an ipywidgets.Box.children"""
+        return tuple(self)
 
 
 def html_hbox(text, style):

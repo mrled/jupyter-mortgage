@@ -57,16 +57,6 @@ def balance_after(apryearly, principal, term, month):
 class LoanPayment:
     """A single loan payment and its result"""
 
-    index = 0
-    totalpmt = 0
-    interestpmt = 0
-    balancepmt = 0
-    overpmt = 0
-    principal = 0
-    value = 0
-    equity = 0
-    totalinterest = 0
-
     def __init__(
             self,
             index=0,
@@ -94,7 +84,7 @@ class LoanPayment:
 # (I guess if I remembered calculus better,
 # I'd be able to use a calculus formula instead)
 # Incorporates overpayments
-def schedule(apryearly, principal, term, overpayments=None, appreciation=0):
+def schedule(apryearly, value, principal, term, overpayments=None, appreciation=0):
     """A schedule of payments, including overpayments
 
     apryearly:      yearly APR of the loan
@@ -107,7 +97,6 @@ def schedule(apryearly, principal, term, overpayments=None, appreciation=0):
     mapr = aprmonthly(apryearly)
     mpay = monthly_payment(apryearly, principal, term)
     monthidx = 0
-    value = principal
     totalinterest = 0
     while principal > 0:
         interestpmt = principal * mapr
@@ -244,12 +233,6 @@ class ClosingCost():
                     should be a CCPayType
     """
 
-    label = None
-    value = None
-    calc = None
-    calctype = None
-    paytype = None
-
     def __init__(
             self,
             label=None,
@@ -310,11 +293,6 @@ IRONHARBOR_FHA_CLOSING_COSTS = [
 
 class CloseResult:
     """The result of a close() function call"""
-
-    saleprice = 0
-    downpayment = None
-    fees = None
-    principal = None
 
     def __init__(self, saleprice=0, downpayment=None, fees=None, principal=None):
         self.saleprice = saleprice
@@ -419,7 +397,7 @@ def close(saleprice, loanapr, loanterm, propertytaxes, costs):
             # that is many months long, so we just assume here that the first
             # month's interest is a good estimate of subsequent months'.
             firstmonth = None
-            for month in schedule(loanapr, result.principal_total, loanterm):
+            for month in schedule(loanapr, saleprice, result.principal_total, loanterm):
                 firstmonth = month
                 break
             cost.value = firstmonth.interestpmt * cost.calc

@@ -9,9 +9,7 @@ from IPython.display import (
     display,
 )
 import ipywidgets
-import ipyleaflet
 
-import gmaps
 from mako.template import Template
 
 import mortgage
@@ -98,7 +96,7 @@ def wrap_close(saleprice, loanapr, loanterm, propertytaxes):
     return result
 
 
-def wrap_schedule(apryearly, principal, years, overpayment, appreciation):
+def wrap_schedule(apryearly, value, principal, years, overpayment, appreciation):
     """Show a loan's mortgage schedule in a Jupyter notebook"""
 
     term = years * mortgage.MONTHS_IN_YEAR
@@ -109,9 +107,9 @@ def wrap_schedule(apryearly, principal, years, overpayment, appreciation):
     # yearly payments for the mortgage schedule summary
     # and monthly payments with no overpayments for comparative analysis in prefacetempl
     months = [month for month in mortgage.schedule(
-        apryearly, principal, term, overpayments=overpayments, appreciation=appreciationpct)]
+        apryearly, value, principal, term, overpayments=overpayments, appreciation=appreciationpct)]
     months_no_over = [month for month in mortgage.schedule(
-        apryearly, principal, term, overpayments=None, appreciation=appreciationpct)]
+        apryearly, value, principal, term, overpayments=None, appreciation=appreciationpct)]
     years = [year for year in mortgage.monthly2yearly_schedule(months)]
 
     prefacetempl = Template(filename='templ/schedule_preface.mako')
@@ -136,11 +134,13 @@ def wrap_schedule(apryearly, principal, years, overpayment, appreciation):
     with summaryout:
         display(HTML(schedtempl.render(
             principal=principal,
+            value=value,
             loanpayments=years,
             paymentinterval_name="Year")))
     with detailout:
         display(HTML(schedtempl.render(
             principal=principal,
+            value=value,
             loanpayments=months,
             paymentinterval_name="Month")))
 
@@ -151,21 +151,6 @@ def wrap_schedule(apryearly, principal, years, overpayment, appreciation):
     display(parentwidg)
 
 
-class OutputChildren(list):
-    """Helper class for building a tuple that can be added to an ipywidgets.Box.children"""
-
-    def display(self, displayable):
-        """Display an object to a new ipywidgets.Output(), and add that output to self"""
-        output = ipywidgets.Output()
-        with output:
-            display(displayable)
-        self.append(output)
-
-    def tuple(self):
-        """Convert the internal list to a tuple, before adding to an ipywidgets.Box.children"""
-        return tuple(self)
-
-
 def get_displayable_geocode(geocode, title):
     """Retrieve display()-able streetmap and property information for a list of geocodes
 
@@ -174,7 +159,7 @@ def get_displayable_geocode(geocode, title):
 
     return      an OutputChildren, for adding to the .children property of an ipywidgets.Box
     """
-    result = OutputChildren()
+    result = util.OutputChildren()
 
     result.display(HTML(f"<h3>{title}</h3>"))
     result.display(HTML(f"<p><em>{geocode.displayname}</em></p>"))
@@ -217,7 +202,7 @@ def wrap_streetmap(address, google_api_key=None):
         mapper = streetmap.OpenStreetMapper()
     geocodes = mapper.geocode(address)
 
-    result = OutputChildren()
+    result = util.OutputChildren()
     result.display(util.html_hbox(f"Using {mapper} for maps", "info"))
     result.display(HTML(f"<h2>Map & property information</h2>"))
 
@@ -255,7 +240,9 @@ def propertyinfo():
             google_api_key):
         """Gather information about a property"""
         closed = wrap_close(saleprice, loanapr, years, propertytaxes)
-        wrap_schedule(loanapr, closed.principal_total, years, overpayment, appreciation)
+
+        # TODO: currently assuming sale price is value; allow changing to something else
+        wrap_schedule(loanapr, saleprice, closed.principal_total, years, overpayment, appreciation)
 
         global street_map_executor  # pylint: disable=W0603,C0103
         streetmap_container = ipywidgets.Box()

@@ -1,4 +1,4 @@
-<%page args="principal, loanpayments, paymentinterval_name" />
+<%page args="principal, value, loanpayments, paymentinterval_name" />
 
 <%!
 from mortgageui import dollar
@@ -25,7 +25,7 @@ from mortgageui import dollar
     <td></td>
     <td></td>
     <td>${dollar(principal)}</td>
-    <td>${dollar(principal)}</td>
+    <td>${dollar(value)}</td>
     <td>${dollar(0)}</td>
     <td>${dollar(0)}</td>
 </tr>
