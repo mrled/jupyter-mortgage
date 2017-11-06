@@ -2,8 +2,6 @@
 
 """Jupyter wrappers for displaying mortgage information"""
 
-import collections
-
 from IPython.display import (
     HTML,
     display,

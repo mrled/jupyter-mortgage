@@ -5,7 +5,6 @@
 import copy
 from enum import Enum, auto
 
-import util
 from log import LOG as log
 
 MONTHS_IN_YEAR = 12
@@ -109,30 +108,32 @@ def schedule(apryearly, value, principal, term, overpayments=None, appreciation=
 
         if principal <= 0:
             # Break before the yield so we don't get empty lines
-            log.info(f"schedule()[{monthidx}]: Principal {principal} is <= 0 in final month")
+            log.info(f"#{monthidx}: Principal {principal} is <= 0 in final month")
             break
         elif principal < 0.01:
             # Also break if the principal is less than a cent
             # This prevents a weird payment that looks like it's for $0,
             # but actually is a rounded-down fraction of a cent
-            log.info(f"schedule()[{monthidx}]: Ignoring remaining principal of {principal} because it is a fraction of a cent in final month")
+            log.info(
+                f"#{monthidx}: Ignoring remaining principal of {principal} "
+                "because it is a fraction of a cent in final month")
             break
         elif principal - balancepmt - overpmt <= 0:
             # Paying the normal amount will result in overpaying in the final month
             # Handle this by adjusting the balancepmt and overpmt
             if principal - balancepmt > 0:
-                log.info(f"schedule()[{monthidx}]: Truncating overpayment to {overpmt} in final month")
+                log.info(f"#{monthidx}: Truncating overpayment to {overpmt} in final month")
                 overpmt = principal - balancepmt
                 principal = 0
             elif balancepmt > principal:
-                log.info(f"schedule()[{monthidx}]: Truncating balance payment to {balancepmt} in final month")
+                log.info(f"#{monthidx}: Truncating balance payment to {balancepmt} in final month")
                 overpmt = 0
                 balancepmt = principal
                 principal = 0
             else:
                 raise Exception("This should not happen")
         else:
-            log.debug(f"schedule()[{monthidx}]: Paying normal amounts in non-final month")
+            log.debug(f"#{monthidx}: Paying normal amounts in non-final month")
             principal = principal - balancepmt - overpmt
 
         monthapprec = appreciation / MONTHS_IN_YEAR

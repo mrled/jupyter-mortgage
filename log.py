@@ -18,7 +18,7 @@ def _getlogger(
     log = logging.getLogger(logname)
     log.setLevel(logging.INFO)
     handler = logging.FileHandler(logfile)
-    handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+    handler.setFormatter(logging.Formatter('%(levelname)s %(filename)s:%(lineno)s:%(funcName)s(): %(message)s'))
     log.addHandler(handler)
     return log
 
