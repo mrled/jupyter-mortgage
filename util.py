@@ -168,3 +168,13 @@ def label_widget(label, container, widget):
         flex_flow='row',
         justify_content='space-between')
     return widget
+
+
+def percent2decimal(percent):
+    """Take a percentage, such as 3.5, and convert it to a decimal, such as 0.035"""
+    return percent / 100
+
+
+def decimal2percent(decimal):
+    """Take a decimal, such as 0.035, and convert it to a percentage, such as 3.5"""
+    return decimal * 100

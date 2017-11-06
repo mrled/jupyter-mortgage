@@ -67,7 +67,7 @@ def toggleinputcells():
         <p>Input code for this notebook is by default hidden for easier reading.</p>
         <p>
             For simple inputs, you may not need to view the code;
-            you can change values like sale price and APR using the GUI widgets.
+            you can change values like sale price and interest rate using the GUI widgets.
             For more complex inputs, such as defining a new set of closing costs,
             you will need to enable input code display, and create a list of closing costs in inline Python.
         </p>
@@ -82,11 +82,11 @@ def toggleinputcells():
         '''))
 
 
-def wrap_close(saleprice, loanapr, loanterm, propertytaxes):
+def wrap_close(saleprice, interestrate, loanterm, propertytaxes):
     """Show loan amounts and closing costs"""
     costs = mortgage.IRONHARBOR_FHA_CLOSING_COSTS
     monthterm = loanterm * mortgage.MONTHS_IN_YEAR
-    result = mortgage.close(saleprice, loanapr, monthterm, propertytaxes, costs)
+    result = mortgage.close(saleprice, interestrate, monthterm, propertytaxes, costs)
 
     templ = Template(filename='templ/close.mako')
     display(HTML(templ.render(closeresult=result)))
@@ -94,7 +94,7 @@ def wrap_close(saleprice, loanapr, loanterm, propertytaxes):
     return result
 
 
-def wrap_schedule(apryearly, value, principal, years, overpayment, appreciation):
+def wrap_schedule(interestrate, value, principal, years, overpayment, appreciation):
     """Show a loan's mortgage schedule in a Jupyter notebook"""
 
     term = years * mortgage.MONTHS_IN_YEAR
@@ -105,9 +105,9 @@ def wrap_schedule(apryearly, value, principal, years, overpayment, appreciation)
     # yearly payments for the mortgage schedule summary
     # and monthly payments with no overpayments for comparative analysis in prefacetempl
     months = [month for month in mortgage.schedule(
-        apryearly, value, principal, term, overpayments=overpayments, appreciation=appreciationpct)]
+        interestrate, value, principal, term, overpayments=overpayments, appreciation=appreciationpct)]
     months_no_over = [month for month in mortgage.schedule(
-        apryearly, value, principal, term, overpayments=None, appreciation=appreciationpct)]
+        interestrate, value, principal, term, overpayments=None, appreciation=appreciationpct)]
     years = [year for year in mortgage.monthly2yearly_schedule(months)]
 
     prefacetempl = Template(filename='templ/schedule_preface.mako')
@@ -115,7 +115,7 @@ def wrap_schedule(apryearly, value, principal, years, overpayment, appreciation)
 
     # Display a preface / summary first
     display(HTML(prefacetempl.render(
-        apryearly=apryearly,
+        interestrate=interestrate,
         principal=principal,
         term=term,
         overpayment=overpayment,
@@ -228,7 +228,7 @@ def propertyinfo():
     """Gather information about a property using Jupyter UI elements"""
 
     def metawrapper(
-            loanapr,
+            interestrate,
             saleprice,
             years,
             overpayment,
@@ -237,10 +237,15 @@ def propertyinfo():
             address,
             google_api_key):
         """Gather information about a property"""
-        closed = wrap_close(saleprice, loanapr, years, propertytaxes)
+
+        interestrate = util.percent2decimal(interestrate)
+        appreciation = util.percent2decimal(appreciation)
+
+        closed = wrap_close(saleprice, interestrate, years, propertytaxes)
 
         # TODO: currently assuming sale price is value; allow changing to something else
-        wrap_schedule(loanapr, saleprice, closed.principal_total, years, overpayment, appreciation)
+        wrap_schedule(
+            interestrate, saleprice, closed.principal_total, years, overpayment, appreciation)
 
         global street_map_executor  # pylint: disable=W0603,C0103
         streetmap_container = ipywidgets.Box()
@@ -259,7 +264,7 @@ def propertyinfo():
         align_items='stretch',
         width='70%'))
 
-    loanapr = util.label_widget("APR", widgets_box, ipywidgets.BoundedFloatText(
+    interestrate = util.label_widget("Interest rate", widgets_box, ipywidgets.BoundedFloatText(
         value=3.75,
         min=0.01,
         step=0.25))
@@ -295,7 +300,7 @@ def propertyinfo():
         value=""))
 
     output = ipywidgets.interactive_output(metawrapper, {
-        'loanapr': loanapr,
+        'interestrate': interestrate,
         'saleprice': saleprice,
         'years': years,
         'overpayment': overpayment,

@@ -5,51 +5,45 @@
 import copy
 from enum import Enum, auto
 
+import util
 from log import LOG as log
+
 
 MONTHS_IN_YEAR = 12
 DAYS_IN_MONTH_APPROX = 30
 
-def monthlyrate(apryearly):
-    """The monthly rate, as calculated from the yearly APR
 
-    I'm not honestly clear on what this *is*,
-    or the difference betweenit and the "monthly APR" below,
-    or if I'm even using the right terms for these,
-    but it's required for the way my existing spreadsheet
-    calculates principal balance after overpayment
-    """
-    return apryearly / MONTHS_IN_YEAR
+def monthlyrate(interestrate):
+    """The monthly interest rate, as calculated from the yearly interest rate"""
+    return interestrate / MONTHS_IN_YEAR
 
-def aprmonthly(apryearly):
-    """The monthly APR, as calculated from the yearly APR"""
-    return apryearly / MONTHS_IN_YEAR / 100
 
 # https://en.wikipedia.org/wiki/Mortgage_calculator#Monthly_payment_formula
-def monthly_payment(apryearly, principal, term):
+def monthly_payment(interestrate, principal, term):
     """The monthly mortgage payment amount
 
-    apryearly:  yearly APR of the loan
-    principal:  total amount of the loan
-    term:       loan term in months
+    interestrate    yearly interest rate of the loan
+    principal       total amount of the loan
+    term            loan term in months
     """
-    mapr = aprmonthly(apryearly)
-    return mapr * principal / (1 - (1 + mapr)**(-term))
+    mrate = monthlyrate(interestrate)
+    return mrate * principal / (1 - (1 + mrate)**(-term))
+
 
 # Use the actual formula
 # I haven't figured out a way to incorporate overpayments into the formula
 # https://en.wikipedia.org/wiki/Mortgage_calculator#Monthly_payment_formula
-def balance_after(apryearly, principal, term, month):
+def balance_after(interestrate, principal, term, month):
     """The principal balance after N months of on-time patyments of *only* the monthly_payment
 
-    apryearly:  yearly APR of the loan
-    principal:  total amount of the loan
-    term:       loan term in months
-    month:      the month to calculate from
+    interestrate    yearly interest rate of the loan
+    principal       total amount of the loan
+    term            loan term in months
+    month           the month to calculate from
     """
-    mapr = aprmonthly(apryearly)
-    mpay = monthly_payment(apryearly, principal, term)
-    return (1 + mapr)**month * principal - ((1 + mapr)**month - 1) / mapr * mpay
+    mrate = monthlyrate(interestrate)
+    mpay = monthly_payment(interestrate, principal, term)
+    return (1 + mrate)**month * principal - ((1 + mrate)**month - 1) / mrate * mpay
 
 
 # Had to change this from a named tuple because a named tuple is immutable
@@ -83,22 +77,21 @@ class LoanPayment:
 # (I guess if I remembered calculus better,
 # I'd be able to use a calculus formula instead)
 # Incorporates overpayments
-def schedule(apryearly, value, principal, term, overpayments=None, appreciation=0):
+def schedule(interestrate, value, principal, term, overpayments=None, appreciation=0):
     """A schedule of payments, including overpayments
 
-    apryearly:      yearly APR of the loan
-    principal:      total amount of the loan
-    term:           loan term in months
-    overpayments:   array of overpayment amounts for each month in the term
-    appreciation:   appreciation in decimal value representing percent
+    interestrate    yearly interest rate of the loan
+    principal       total amount of the loan
+    term            loan term in months
+    overpayments    array of overpayment amounts for each month in the term
+    appreciation    appreciation in decimal value representing percent
     """
     overpayments = overpayments or []
-    mapr = aprmonthly(apryearly)
-    mpay = monthly_payment(apryearly, principal, term)
+    mpay = monthly_payment(interestrate, principal, term)
     monthidx = 0
     totalinterest = 0
     while principal > 0:
-        interestpmt = principal * mapr
+        interestpmt = principal * monthlyrate(interestrate)
         totalinterest += interestpmt
         balancepmt = mpay - interestpmt
         try:
@@ -345,11 +338,11 @@ class CloseResult:
             raise Exception(f"Unknown paytype {cost.paytype}")
 
 
-def close(saleprice, loanapr, loanterm, propertytaxes, costs):
+def close(saleprice, interestrate, loanterm, propertytaxes, costs):
     """Calculate loan amount and closing costs
 
     saleprice       sale price for the property
-    loanapr         loan APR
+    interestrate    interest rate for the loan
     loanterm        loan term in months
     propertytaxes   estimated property taxes
     costs           list of ClosingCost objects
@@ -366,9 +359,13 @@ def close(saleprice, loanapr, loanterm, propertytaxes, costs):
     for cost in costs:
         # First, check our inputs
         if cost.calctype == CCCalcType.DOLLAR_AMOUNT and cost.value is None:
-            raise Exception(f"The {cost.label} ClosingCost calctype is DOLLAR_AMOUNT, but with an empty value property")
+            raise Exception(
+                f"The {cost.label} ClosingCost calctype is DOLLAR_AMOUNT, "
+                "but with an empty value property")
         elif cost.calctype != CCCalcType.DOLLAR_AMOUNT and cost.calc is None:
-            raise Exception(f"The {cost.label} ClosingCost calctype is {cost.calctype}, but with an empty calc property")
+            raise Exception(
+                f"The {cost.label} ClosingCost calctype is {cost.calctype}, "
+                "but with an empty calc property")
 
         # Now calculate what can be calculated now
         # Don't calculate LOAN_FRACTION or INTEREST_MONTHS calctypes here,
@@ -376,10 +373,10 @@ def close(saleprice, loanapr, loanterm, propertytaxes, costs):
         if cost.calctype == CCCalcType.DOLLAR_AMOUNT:
             result.apply(cost)
         if cost.calctype == CCCalcType.SALE_FRACTION:
-            cost.value = saleprice * cost.calc / 100
+            cost.value = saleprice * util.percent2decimal(cost.calc)
             result.apply(cost)
         elif cost.calctype == CCCalcType.PROPERTY_TAX_FRACTION:
-            cost.value = propertytaxes * cost.calc / 100
+            cost.value = propertytaxes * util.percent2decimal(cost.calc)
             result.apply(cost)
 
     for cost in costs:
@@ -389,7 +386,7 @@ def close(saleprice, loanapr, loanterm, propertytaxes, costs):
         # calctype=LOAN_FRACTION paytype=PRINCIPAL,
         # but that wouldn't make much sense so we don't really handle it here
         if cost.calctype == CCCalcType.LOAN_FRACTION:
-            cost.value = result.principal_total * cost.calc / 100
+            cost.value = result.principal_total * util.percent2decimal(cost.calc)
             result.apply(cost)
         elif cost.calctype == CCCalcType.INTEREST_MONTHS:
             # This is not a perfect way to do this calculation.
@@ -398,18 +395,10 @@ def close(saleprice, loanapr, loanterm, propertytaxes, costs):
             # that is many months long, so we just assume here that the first
             # month's interest is a good estimate of subsequent months'.
             firstmonth = None
-            for month in schedule(loanapr, saleprice, result.principal_total, loanterm):
+            for month in schedule(interestrate, saleprice, result.principal_total, loanterm):
                 firstmonth = month
                 break
             cost.value = firstmonth.interestpmt * cost.calc
             result.apply(cost)
-
-    # applied = result.downpayment + result.fees + result.principal
-    # if len(applied) != len(costs):
-    #     errmsg = "Erroneously unapplied costs:"
-    #     for cost in costs:
-    #         if cost not in applied:
-    #             errmsg += f" {cost.label}"
-    #     raise Exception(errmsg)
 
     return result

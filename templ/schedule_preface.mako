@@ -1,15 +1,16 @@
-<%page args="apryearly, principal, term, overpayment, appreciation, monthlypayments, monthlypayments_no_over" />
+<%page args="interestrate, principal, term, overpayment, appreciation, monthlypayments, monthlypayments_no_over" />
 
 <%!
 from mortgage import MONTHS_IN_YEAR
 from mortgageui import dollar
+from util import decimal2percent
 %>
 
 <h2>Mortgage amortization schedule</h2>
 
-<p>Amortization schedule for a <span>${dollar(principal)}</span> loan over ${term} months at ${apryearly}% interest.</p>
+<p>Amortization schedule for a <span>${dollar(principal)}</span> loan over ${term} months at ${decimal2percent(interestrate)}% interest.</p>
 
-<p>Expect the property to appreciate ${appreciation}% each year.</p>
+<p>Expect the property to appreciate ${decimal2percent(appreciation)}% each year.</p>
 
 %if overpayment != 0:
     <p>
