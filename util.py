@@ -22,7 +22,6 @@ class DelayedExecutor():
         self.stopevent = threading.Event()
         self.thread = None
         self.progbar_container = None
-        self.thread_output_container = None
         self.progresswidget = None
 
     def run(
@@ -76,11 +75,9 @@ class DelayedExecutor():
         # This lets us overwrite the children of self.container,
         # without losing any preexisting children in container
         self.progbar_container = ipywidgets.Box()
-        self.thread_output_container = ipywidgets.Box()
-        self.container.children = (self.progbar_container, self.thread_output_container)
+        self.container.children = (self.progbar_container,)
         output_container.children += (self.container,)
 
-        self.thread_output_container.children = ()
         self.progbar_container.children = (self.progresswidget,)
 
         self.thread = threading.Thread(target=self.timer, args=(
@@ -104,12 +101,12 @@ class DelayedExecutor():
             self.progresswidget.value += timerinterval
             if self.progresswidget.value >= timerlength:
                 log.info("Stop event did not fire - calling action()")
-                self.stopevent.set() # Stop the loop
-                # If the stop event did not fire,
-                # then we can execute the map display function
-                self.container.children = (self.thread_output_container,)
+                self.container.children = ()
                 result = action(*action_args, **action_kwargs)
-                self.thread_output_container.children = (result,)
+                log.info(f"Got {len(result)} children to display in thread output container")
+                self.container.children = result
+                self.stopevent.set() # Stop the loop
+                log.info("Sent stop event from within timer() - all done")
 
         self.progbar_container.children = ()
 

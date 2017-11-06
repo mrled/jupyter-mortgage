@@ -2,7 +2,7 @@
 
 """Jupyter wrappers for displaying mortgage information"""
 
-import threading
+import collections
 
 from IPython.display import (
     HTML,
@@ -151,86 +151,91 @@ def wrap_schedule(apryearly, principal, years, overpayment, appreciation):
     display(parentwidg)
 
 
-def get_streetmap(address, google_api_key):
-    """Show a streetmap"""
+class OutputChildren(list):
+    """Helper class for building a tuple that can be added to an ipywidgets.Box.children"""
 
-    # NOTE: display(HTML(...)) and display(ipywidgets.HTML(...)) intermixed because it lets me
-    # be lazy about styling and have it mostly look ok
+    def display(self, displayable):
+        """Display an object to a new ipywidgets.Output(), and add that output to self"""
+        output = ipywidgets.Output()
+        with output:
+            display(displayable)
+        self.append(output)
 
-    output = ipywidgets.Output()
-    with output:
+    def tuple(self):
+        """Convert the internal list to a tuple, before adding to an ipywidgets.Box.children"""
+        return tuple(self)
 
-        display(HTML(f"<h2>Map & property information</h2>"))
 
-        if google_api_key != "":
-            gmaps.configure(api_key=google_api_key)
-            geocodes = streetmap.geocode_google(address, google_api_key)
-            display(util.html_hbox("Google API key found - using Google maps", "info"))
-        else:
-            geocodes = streetmap.geocode_nominatim(address)
-            display(util.html_hbox("Using OpenStreetMap for map data", "info"))
+def get_displayable_geocode(geocode, title):
+    """Retrieve display()-able streetmap and property information for a list of geocodes
 
-        if len(geocodes) < 1:
-            display(util.html_hbox(
-                f"Could not find property at {address}",
-                "danger"))
-        elif len(geocodes) > 1:
-            display(util.html_hbox(
-                f"{len(geocodes)} matches returned for {address}; all are displayed below",
-                "warning"))
+    geocodes    list of GeocodeResult objects
+    title       value for an <h3> element
 
-        for idx, geocode in enumerate(geocodes):
+    return      an OutputChildren, for adding to the .children property of an ipywidgets.Box
+    """
+    result = OutputChildren()
 
-            if len(geocodes) != 1:
-                display(HTML(f"<h3>Property {idx + 1}</h3>"))
-            else:
-                display(HTML("<h3>Property information</h3>"))
-            display(HTML(f"<p><em>{geocode.displayname}</em></p>"))
+    result.display(HTML(f"<h3>{title}</h3>"))
+    result.display(HTML(f"<p><em>{geocode.displayname}</em></p>"))
 
-            property_info = ipywidgets.Box()
-            property_info.layout = ipywidgets.Layout(
-                display='flex',
-                flex_flow='column',
-                align_items='stretch',
-                width='20em')
+    property_info = ipywidgets.Box(layout=ipywidgets.Layout(
+        display='flex',
+        flex_flow='column',
+        align_items='stretch',
+        width='20em'))
 
-            prop_info_child_layout = ipywidgets.Layout(
+    def info_row(label, value):
+        """Return an informational row for displaying property info"""
+        return ipywidgets.Box(
+            children=(
+                ipywidgets.Label(label),
+                ipywidgets.Label(value)),
+            layout=ipywidgets.Layout(
                 display='flex',
                 flex_flow='row',
-                justify_content='space-between')
+                justify_content='space-between'))
 
-            property_info.children = (
-                ipywidgets.Box(
-                    children=(
-                        ipywidgets.Label("County:"),
-                        ipywidgets.Label(geocode.county)),
-                    layout=prop_info_child_layout),
-                ipywidgets.Box(
-                    children=(
-                        ipywidgets.Label("Neighborhood:"),
-                        ipywidgets.Label(geocode.neighborhood)),
-                    layout=prop_info_child_layout),
-                ipywidgets.Box(
-                    children=(
-                        ipywidgets.Label("Latitude:"),
-                        ipywidgets.Label(str(geocode.coordinates[0]))),
-                    layout=prop_info_child_layout),
-                ipywidgets.Box(
-                    children=(
-                        ipywidgets.Label("Longitude:"),
-                        ipywidgets.Label(str(geocode.coordinates[1]))),
-                    layout=prop_info_child_layout))
-            display(property_info)
+    property_info.children = (
+        info_row("County", geocode.county),
+        info_row("Neighborhood", geocode.neighborhood),
+        info_row("Latitude", geocode.coordinates[0]),
+        info_row("Longitude", geocode.coordinates[1]))
 
-            if google_api_key != "":
-                property_figure = gmaps.figure(center=geocode.coordinates, zoom_level=14)
-                property_figure.add_layer(gmaps.marker_layer([geocode.coordinates]))
-            else:
-                property_figure = ipyleaflet.Map(center=geocode.coordinates, zoom=14)
-                property_figure += ipyleaflet.Marker(location=geocode.coordinates)
-            display(property_figure)
+    result.display(property_info)
+    result.display(geocode.figure)
 
-    return output
+    return result
+
+
+def wrap_streetmap(address, google_api_key=None):
+    """Show street maps and property information"""
+
+    if google_api_key:
+        mapper = streetmap.GoogleMapper(google_api_key)
+    else:
+        mapper = streetmap.OpenStreetMapper()
+    geocodes = mapper.geocode(address)
+
+    result = OutputChildren()
+    result.display(util.html_hbox(f"Using {mapper} for maps", "info"))
+    result.display(HTML(f"<h2>Map & property information</h2>"))
+
+    if len(geocodes) < 1:
+        result.display(
+            util.html_hbox(f"Could not find property at {address}", "danger"))
+    elif len(geocodes) > 1:
+        result.display(
+            util.html_hbox(f"{len(geocodes)} matches returned for {address}", "warning"))
+
+    for idx, geocode in enumerate(geocodes):
+        if len(geocodes) != 1:
+            maptitle = f"Property {idx + 1}</h3>"
+        else:
+            maptitle = "Property information"
+        result += get_displayable_geocode(geocode, maptitle)
+
+    return result
 
 
 street_map_executor = util.DelayedExecutor()  # pylint: disable=C0103
@@ -254,12 +259,12 @@ def propertyinfo():
 
         global street_map_executor  # pylint: disable=W0603,C0103
         streetmap_container = ipywidgets.Box()
-        display(streetmap_container)
         street_map_executor.run(
             streetmap_container,
             "Loading maps...",
-            get_streetmap,
+            wrap_streetmap,
             action_args=(address, google_api_key))
+        display(streetmap_container)
 
     display(HTML(Template("templ/instructions.mako").render()))
 

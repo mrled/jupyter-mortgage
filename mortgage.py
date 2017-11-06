@@ -143,7 +143,7 @@ def schedule(apryearly, principal, term, overpayments=None, appreciation=0):
             else:
                 raise Exception("This should not happen")
         else:
-            log.info(f"schedule()[{monthidx}]: Paying normal amounts in non-final month")
+            log.debug(f"schedule()[{monthidx}]: Paying normal amounts in non-final month")
             principal = principal - balancepmt - overpmt
 
         monthapprec = appreciation / MONTHS_IN_YEAR
