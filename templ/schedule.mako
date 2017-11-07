@@ -9,6 +9,7 @@ from mortgageui import dollar
 <tr>
     <th>${paymentinterval_name}</th>
     <th>Regular payment</th>
+    <th>Total payment</th>
     <th>Interest</th>
     <th>Balance</th>
     <th>Overpayment</th>
@@ -20,6 +21,8 @@ from mortgageui import dollar
 
 <tr>
     <td>Initial loan amount</td>
+    ## <td>${dollar(loanpayments[0].regularpmt)}</td>
+    <td></td>
     <td></td>
     <td></td>
     <td></td>
@@ -33,6 +36,7 @@ from mortgageui import dollar
 %for payment in loanpayments:
     <tr>
         <td>${payment.index + 1}</td>
+        <td>${dollar(payment.regularpmt)}</td>
         <td>${dollar(payment.totalpmt)}</td>
         <td>${dollar(payment.interestpmt)}</td>
         <td>${dollar(payment.balancepmt)}</td>
