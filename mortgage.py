@@ -71,6 +71,19 @@ class LoanPayment:
         self.equity = equity
         self.totalinterest = totalinterest
 
+    def __str__(self):
+        return " ".join([
+            f"#{self.index}",
+            f"Total({self.totalpmt})",
+            f"Interest({self.interestpmt})",
+            f"Balance({self.balancepmt})",
+            f"Over({self.overpmt})",
+            f"RemainingPrincipal({self.principal})",
+            f"Value({self.value})",
+            f"Equity({self.equity})",
+            f"TotalInterest({self.totalinterest})"
+        ])
+
 
 # Rather than using the formula to calculate principal balance,
 # do it by brute-force
@@ -93,6 +106,8 @@ def schedule(interestrate, value, principal, term, overpayments=None, appreciati
     monthidx = 0
     totalinterest = 0
     while principal > 0:
+        if monthidx > term:
+            raise Exception("This should never happen")
         interestpmt = principal * monthlyrate(interestrate)
         totalinterest += interestpmt
         balancepmt = mpay - interestpmt
@@ -128,13 +143,13 @@ def schedule(interestrate, value, principal, term, overpayments=None, appreciati
             else:
                 raise Exception("This should not happen")
         else:
-            log.debug(f"#{monthidx}: Paying normal amounts in non-final month")
+            log.info(f"#{monthidx}: Paying normal amounts in non-final month")
             principal = principal - balancepmt - overpmt
 
         monthapprec = appreciation / MONTHS_IN_YEAR
         value = value * (1 + monthapprec)
 
-        yield LoanPayment(
+        payment = LoanPayment(
             index=monthidx,
             totalpmt=interestpmt + balancepmt + overpmt,
             interestpmt=interestpmt,
@@ -144,6 +159,8 @@ def schedule(interestrate, value, principal, term, overpayments=None, appreciati
             value=value,
             equity=value - principal,
             totalinterest=totalinterest)
+        # log.info(payment)
+        yield payment
 
         monthidx += 1
 
@@ -271,7 +288,7 @@ def monthly_expenses(months, costs):
                 payment.append(cost)
             if cost.calctype == MCCalcType.PRINCIPAL_FRACTION:
                 cost.value = month.principal * util.percent2decimal(cost.calc)
-                log.info(f"Calculating monthy expense '{cost.label}' to be {cost.value}'")
+                log.info(f"Calculating monthy expense: {cost}")
                 payment.append(cost)
             else:
                 raise NotImplementedError()
