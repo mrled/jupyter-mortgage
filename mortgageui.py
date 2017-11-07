@@ -100,15 +100,17 @@ def wrap_schedule(interestrate, value, principal, years, overpayment, appreciati
 
     term = years * mortgage.MONTHS_IN_YEAR
     overpayments = [overpayment for _ in range(term)]
-    appreciationpct = appreciation / 100
+    appreciationpct = util.percent2decimal(appreciation)
+    interestratepct = util.percent2decimal(interestrate)
 
     # Calculate the monthly payments for the mortgage schedule detail,
     # yearly payments for the mortgage schedule summary
     # and monthly payments with no overpayments for comparative analysis in prefacetempl
     months = [month for month in mortgage.schedule(
-        interestrate, value, principal, term, overpayments=overpayments, appreciation=appreciationpct)]
+        interestratepct, value, principal, term,
+        overpayments=overpayments, appreciation=appreciationpct)]
     months_no_over = [month for month in mortgage.schedule(
-        interestrate, value, principal, term, overpayments=None, appreciation=appreciationpct)]
+        interestratepct, value, principal, term, overpayments=None, appreciation=appreciationpct)]
     years = [year for year in mortgage.monthly2yearly_schedule(months)]
 
     prefacetempl = Template(filename='templ/schedule_preface.mako')
@@ -153,12 +155,13 @@ def wrap_schedule(interestrate, value, principal, years, overpayment, appreciati
 
 
 def wrap_monthly_expenses(schedule, costs):
+    """Show monthly expenses"""
     months = [month for month in mortgage.monthly_expenses(schedule, costs)]
     htmlstr = "<table>"
     for midx, month in enumerate(months):
         htmlstr += f"<tr><th colspan='2'>Month {midx + 1}</th></tr>"
         for expense in month:
-            log.info(f"Calculating expense: '{expense}'")
+            log.info(f"Retrieving calculated expense: '{expense}'")
             htmlstr += f"<tr><td>{expense.label}</td><td>{expense.value}</td></tr>"
     htmlstr += "</table>"
     display(HTML(htmlstr))
