@@ -17,9 +17,18 @@ def _getlogger(
     """
     log = logging.getLogger(logname)
     log.setLevel(logging.INFO)
-    handler = logging.FileHandler(logfile)
-    handler.setFormatter(logging.Formatter('%(levelname)s %(filename)s:%(lineno)s:%(funcName)s(): %(message)s'))
-    log.addHandler(handler)
+
+    logfmt = '%(levelname)s %(asctime)s %(filename)s:%(lineno)s:%(funcName)s(): %(message)s'
+    datefmt = '%Y%m%d-%H%M%S'
+
+    fhandler = logging.FileHandler(logfile)
+    fhandler.setFormatter(logging.Formatter(logfmt, datefmt=datefmt))
+    log.addHandler(fhandler)
+
+    # shandler = logging.StreamHandler()
+    # shandler.setFormatter(logging.Formatter(logfmt, datefmt=datefmt))
+    # log.addHandler(shandler)
+
     return log
 
 
