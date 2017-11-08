@@ -10,10 +10,10 @@ import ipywidgets
 
 from mako.template import Template
 
-import mortgage
-import streetmap
-import util
-from log import LOG as log
+from ..log import LOG as log
+from .. import util
+from .. import mortgage
+from . import streetmap
 
 
 def dollar(amount):
@@ -86,8 +86,8 @@ def toggleinputcells():
 def wrap_close(saleprice, interestrate, loanterm, propertytaxes):
     """Show loan amounts and closing costs"""
     costs = mortgage.IRONHARBOR_FHA_CLOSING_COSTS
-    monthterm = loanterm * mortgage.MONTHS_IN_YEAR
-    result = mortgage.close(saleprice, interestrate, monthterm, propertytaxes, costs)
+    monthterm = loanterm * mortgage.math.MONTHS_IN_YEAR
+    result = mortgage.closing.close(saleprice, interestrate, monthterm, propertytaxes, costs)
 
     templ = Template(filename='templ/close.mako')
     display(HTML(templ.render(closeresult=result)))
@@ -255,8 +255,8 @@ def propertyinfo():
             google_api_key):
         """Gather information about a property"""
 
-        interestrate = util.percent2decimal(interestrate)
-        appreciation = util.percent2decimal(appreciation)
+        interestrate = mortgage.percent2decimal(interestrate)
+        appreciation = mortgage.percent2decimal(appreciation)
 
         closed = wrap_close(saleprice, interestrate, years, propertytaxes)
 
