@@ -30,22 +30,6 @@ def monthly_payment(interestrate, principal, term):
     return mrate * principal / (1 - (1 + mrate)**(-term))
 
 
-# Use the actual formula
-# I haven't figured out a way to incorporate overpayments into the formula
-# https://en.wikipedia.org/wiki/Mortgage_calculator#Monthly_payment_formula
-def balance_after(interestrate, principal, term, month):
-    """The principal balance after N months of on-time patyments of *only* the monthly_payment
-
-    interestrate    yearly interest rate of the loan
-    principal       total amount of the loan
-    term            loan term in months
-    month           the month to calculate from
-    """
-    mrate = monthlyrate(interestrate)
-    mpay = monthly_payment(interestrate, principal, term)
-    return (1 + mrate)**month * principal - ((1 + mrate)**month - 1) / mrate * mpay
-
-
 # Had to change this from a named tuple because a named tuple is immutable
 class LoanPayment:
     """A single loan payment and its result"""
@@ -90,11 +74,6 @@ class LoanPayment:
         ])
 
 
-# Rather than using the formula to calculate principal balance,
-# do it by brute-force
-# (I guess if I remembered calculus better,
-# I'd be able to use a calculus formula instead)
-# Incorporates overpayments
 def schedule(interestrate, value, principal, term, overpayments=None, appreciation=0):
     """A schedule of payments, including overpayments
 
@@ -105,6 +84,24 @@ def schedule(interestrate, value, principal, term, overpayments=None, appreciati
     appreciation    appreciation in decimal value representing percent
 
     yield           LoanPayment objects
+
+    NOTE: Calculating with the actual formula
+    You can use the formula to calculate monthly payments
+    The disadvantage to this is basically me: I haven't figured out how to apply overpayments
+    (I guess if I remembered calculus better, I could use a calculus formula instead.)
+    def balance_after(interestrate, principal, term, month):
+        '''The principal balance after N months of on-time patyments of *only* the monthly_payment
+
+        Formula from: https://en.wikipedia.org/wiki/Mortgage_calculator#Monthly_payment_formula
+
+        interestrate    yearly interest rate of the loan
+        principal       total amount of the loan
+        term            loan term in months
+        month           the month to calculate from
+        '''
+        mrate = monthlyrate(interestrate)
+        mpay = monthly_payment(interestrate, principal, term)
+        return (1 + mrate)**month * principal - ((1 + mrate)**month - 1) / mrate * mpay
     """
     overpayments = overpayments or []
     mpay = monthly_payment(interestrate, principal, term)
