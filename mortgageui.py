@@ -315,7 +315,7 @@ def propertyinfo():
             min=0,
             max=1_000_000,
             step=5))
-    address = util.label_widget("Property address", widgets_box, ipywidgets.Text(
+    address = util.label_widget("Property address", widgets_box, ipywidgets.Textarea(
         value="1600 Pennsylvania Ave NW, Washington, DC 20500"))
     google_api_key = util.label_widget("Google API key (optional)", widgets_box, ipywidgets.Text(
         value=""))
