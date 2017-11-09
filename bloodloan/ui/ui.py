@@ -2,6 +2,8 @@
 
 """Jupyter wrappers for displaying mortgage information"""
 
+import os
+
 from IPython.display import (
     HTML,
     display,
@@ -10,10 +12,17 @@ import ipywidgets
 
 from mako.template import Template
 
-from ..log import LOG as log
-from .. import util
-from .. import mortgage
-from . import streetmap
+from bloodloan.log import LOG as log
+from bloodloan import util
+from bloodloan.mortgage import closing
+from bloodloan.mortgage import expenses
+from bloodloan.mortgage import mmath
+from bloodloan.mortgage import schedule
+from bloodloan.ui import streetmap
+
+
+SCRIPTDIR = os.path.dirname(os.path.realpath(__file__))
+TEMPL = os.path.join(SCRIPTDIR, 'templ')
 
 
 def dollar(amount):
@@ -85,11 +94,11 @@ def toggleinputcells():
 
 def wrap_close(saleprice, interestrate, loanterm, propertytaxes):
     """Show loan amounts and closing costs"""
-    costs = mortgage.IRONHARBOR_FHA_CLOSING_COSTS
-    monthterm = loanterm * mortgage.math.MONTHS_IN_YEAR
-    result = mortgage.closing.close(saleprice, interestrate, monthterm, propertytaxes, costs)
+    costs = closing.IRONHARBOR_FHA_CLOSING_COSTS
+    monthterm = loanterm * mmath.MONTHS_IN_YEAR
+    result = closing.close(saleprice, interestrate, monthterm, propertytaxes, costs)
 
-    templ = Template(filename='templ/close.mako')
+    templ = Template(filename=os.path.join(TEMPL, 'close.mako'))
     display(HTML(templ.render(closeresult=result)))
 
     return result
@@ -98,22 +107,22 @@ def wrap_close(saleprice, interestrate, loanterm, propertytaxes):
 def wrap_schedule(interestrate, value, principal, saleprice, years, overpayment, appreciation):
     """Show a loan's mortgage schedule in a Jupyter notebook"""
 
-    term = years * mortgage.MONTHS_IN_YEAR
+    term = years * mmath.MONTHS_IN_YEAR
     overpayments = [overpayment for _ in range(term)]
 
     # Calculate the monthly payments for the mortgage schedule detail,
     # yearly payments for the mortgage schedule summary
     # and monthly payments with no overpayments for comparative analysis in prefacetempl
-    months = [month for month in mortgage.schedule(
+    months = [month for month in schedule.schedule(
         interestrate, value, principal, saleprice, term,
         overpayments=overpayments, appreciation=appreciation,
-        monthlycosts=mortgage.IRONHARBOR_FHA_MONTHLY_COSTS + mortgage.CAPEX_MONTHLY_COSTS)]
-    months_no_over = [month for month in mortgage.schedule(
+        monthlycosts=expenses.IRONHARBOR_FHA_MONTHLY_COSTS + expenses.CAPEX_MONTHLY_COSTS)]
+    months_no_over = [month for month in schedule.schedule(
         interestrate, value, principal, saleprice, term, overpayments=None, appreciation=appreciation)]
-    years = [year for year in mortgage.monthly2yearly_schedule(months)]
+    years = [year for year in schedule.monthly2yearly_schedule(months)]
 
-    prefacetempl = Template(filename='templ/schedule_preface.mako')
-    schedtempl = Template(filename='templ/schedule.mako')
+    prefacetempl = Template(filename=os.path.join(TEMPL, 'schedule_preface.mako'))
+    schedtempl = Template(filename=os.path.join(TEMPL, 'schedule.mako'))
 
     # Display a preface / summary first
     display(HTML(prefacetempl.render(
@@ -255,8 +264,8 @@ def propertyinfo():
             google_api_key):
         """Gather information about a property"""
 
-        interestrate = mortgage.percent2decimal(interestrate)
-        appreciation = mortgage.percent2decimal(appreciation)
+        interestrate = mmath.percent2decimal(interestrate)
+        appreciation = mmath.percent2decimal(appreciation)
 
         closed = wrap_close(saleprice, interestrate, years, propertytaxes)
 
@@ -267,7 +276,7 @@ def propertyinfo():
 
         # wrap_monthly_expenses(
         #     months,
-        #     mortgage.IRONHARBOR_FHA_MONTHLY_COSTS + mortgage.CAPEX_MONTHLY_COSTS,
+        #     expenses.IRONHARBOR_FHA_MONTHLY_COSTS + expenses.CAPEX_MONTHLY_COSTS,
         #     saleprice)
 
         global street_map_executor  # pylint: disable=W0603,C0103
@@ -279,7 +288,8 @@ def propertyinfo():
             action_args=(address, google_api_key))
         display(streetmap_container)
 
-    display(HTML(Template("templ/instructions.mako").render()))
+    instructionstempl = Template(filename=os.path.join(TEMPL, 'instructions.mako'))
+    display(HTML(instructionstempl.render()))
 
     widgets_box = ipywidgets.Box(layout=ipywidgets.Layout(
         display='flex',

@@ -1,9 +1,8 @@
 <%page args="interestrate, principal, term, overpayment, appreciation, monthlypayments, monthlypayments_no_over" />
 
 <%!
-from mortgage import MONTHS_IN_YEAR
-from mortgageui import dollar
-from util import decimal2percent
+from bloodloan.mortgage.mmath import MONTHS_IN_YEAR, decimal2percent
+from bloodloan.ui.ui import dollar
 %>
 
 <h2>Mortgage amortization schedule</h2>

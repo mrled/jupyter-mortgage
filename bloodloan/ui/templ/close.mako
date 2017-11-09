@@ -1,7 +1,7 @@
 <%page args="closeresult" />
 
 <%!
-from mortgageui import dollar
+from bloodloan.ui.ui import dollar
 %>
 
 <h2>Closing</h2>

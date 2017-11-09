@@ -1,7 +1,7 @@
 <%page args="principal, value, loanpayments, paymentinterval_name" />
 
 <%!
-from mortgageui import dollar
+from bloodloan.ui.ui import dollar
 %>
 
 <table>

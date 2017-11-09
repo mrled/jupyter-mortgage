@@ -3,8 +3,8 @@
 import copy
 import enum
 
-from ..log import LOG as log
-from .mmath import *
+from bloodloan.log import LOG as log
+from bloodloan.mortgage import mmath
 
 
 class MCCalcType(enum.Enum):
@@ -36,7 +36,7 @@ class MCCapEx():
     def __init__(self, cost, lifespan):
         self.total = cost
         self.lifespan = lifespan
-        self.monthly = cost / lifespan / MONTHS_IN_YEAR
+        self.monthly = cost / lifespan / mmath.MONTHS_IN_YEAR
 
 
 class MonthlyCost():
@@ -107,10 +107,6 @@ def monthly_expenses(costs, saleprice, boyprincipal):
     """
     expenses = []
 
-    if not costs:
-        return expenses
-
-
     # deepcopy the costs during *every* iteration,
     # or else we keep doing expenses.append(cost) on the same cost each time
     for cost in copy.deepcopy(costs):
@@ -131,14 +127,14 @@ def monthly_expenses(costs, saleprice, boyprincipal):
         if cost.calctype is MCCalcType.DOLLAR_AMOUNT:
             pass
         elif cost.calctype is MCCalcType.YEARLY_PRINCIPAL_FRACTION:
-            cost.value = boyprincipal * util.percent2decimal(cost.calc) / MONTHS_IN_YEAR
+            fraction = mmath.percent2decimal(cost.calc)
+            cost.value = boyprincipal * fraction / mmath.MONTHS_IN_YEAR
         elif cost.calctype is MCCalcType.SALE_FRACTION:
-            cost.value = saleprice * util.percent2decimal(cost.calc)
+            cost.value = saleprice * mmath.percent2decimal(cost.calc)
         elif cost.calctype is MCCalcType.CAPEX:
             cost.value = cost.calc.monthly
         else:
             raise NotImplementedError()
-
 
         log.info(f"Calculating monthy expense: {cost}")
         expenses.append(cost)

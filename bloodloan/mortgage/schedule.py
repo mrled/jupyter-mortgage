@@ -1,7 +1,8 @@
 """Mortgage schedule"""
 
-from ..log import LOG as log
-from . import math
+from bloodloan.log import LOG as log
+from bloodloan.mortgage import expenses
+from bloodloan.mortgage import mmath
 
 
 class LoanPayment:
@@ -99,7 +100,7 @@ def schedule(
         return (1 + mrate)**month * principal - ((1 + mrate)**month - 1) / mrate * mpay
     """
     overpayments = overpayments or []
-    mpay = math.monthly_payment(interestrate, principal, term)
+    mpay = mmath.monthly_payment(interestrate, principal, term)
     log.info(f"Monthly payment calculated at {mpay}")
     monthidx = 0
     totalinterest = 0
@@ -112,7 +113,7 @@ def schedule(
         if monthidx % 12 == 0:
             boyprincipal = principal
 
-        interestpmt = principal * math.monthlyrate(interestrate)
+        interestpmt = principal * mmath.monthlyrate(interestrate)
         totalinterest += interestpmt
         balancepmt = mpay - interestpmt
         try:
@@ -150,7 +151,7 @@ def schedule(
             log.debug(f"#{monthidx}: Paying normal amounts in non-final month")
             principal = principal - balancepmt - overpmt
 
-        monthapprec = appreciation / math.MONTHS_IN_YEAR
+        monthapprec = appreciation / mmath.MONTHS_IN_YEAR
         value = value * (1 + monthapprec)
 
         payment = LoanPayment(
@@ -164,7 +165,7 @@ def schedule(
             value=value,
             equity=value - principal,
             totalinterest=totalinterest,
-            othercosts=monthly_expenses(monthlycosts, saleprice, boyprincipal))
+            othercosts=expenses.monthly_expenses(monthlycosts, saleprice, boyprincipal))
         # log.info(payment)
         yield payment
 
@@ -179,7 +180,7 @@ def monthly2yearly_schedule(months):
     year = None
     idx = 0
     for month in months:
-        if idx % math.MONTHS_IN_YEAR == 0:
+        if idx % mmath.MONTHS_IN_YEAR == 0:
             if year:
                 yield year
                 newyearidx = year.index + 1

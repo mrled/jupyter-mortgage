@@ -7,7 +7,7 @@ import threading
 from IPython.display import display
 import ipywidgets
 
-from log import LOG as log
+from bloodloan.log import LOG as log
 
 
 class DelayedExecutor():

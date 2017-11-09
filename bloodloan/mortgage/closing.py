@@ -3,9 +3,9 @@
 import copy
 import enum
 
-from ..log import LOG as log
-from .mmath import *
-from .schedule import *
+from bloodloan.log import LOG as log
+from bloodloan.mortgage import mmath
+from bloodloan.mortgage import schedule
 
 
 class CCCalcType(enum.Enum):
@@ -199,10 +199,10 @@ def close(saleprice, interestrate, loanterm, propertytaxes, costs):
         if cost.calctype == CCCalcType.DOLLAR_AMOUNT:
             result.apply(cost)
         if cost.calctype == CCCalcType.SALE_FRACTION:
-            cost.value = saleprice * percent2decimal(cost.calc)
+            cost.value = saleprice * mmath.percent2decimal(cost.calc)
             result.apply(cost)
         elif cost.calctype == CCCalcType.PROPERTY_TAX_FRACTION:
-            cost.value = propertytaxes * percent2decimal(cost.calc)
+            cost.value = propertytaxes * mmath.percent2decimal(cost.calc)
             result.apply(cost)
 
     for cost in costs:
@@ -212,7 +212,7 @@ def close(saleprice, interestrate, loanterm, propertytaxes, costs):
         # calctype=LOAN_FRACTION paytype=PRINCIPAL,
         # but that wouldn't make much sense so we don't really handle it here
         if cost.calctype == CCCalcType.LOAN_FRACTION:
-            cost.value = result.principal_total * percent2decimal(cost.calc)
+            cost.value = result.principal_total * mmath.percent2decimal(cost.calc)
             result.apply(cost)
         elif cost.calctype == CCCalcType.INTEREST_MONTHS:
             # This is not a perfect way to do this calculation.
@@ -220,10 +220,8 @@ def close(saleprice, interestrate, loanterm, propertytaxes, costs):
             # the case. However, we don't expect to get an INTEREST_MONTHS cost
             # that is many months long, so we just assume here that the first
             # month's interest is a good estimate of subsequent months'.
-            firstmonth = None
-            for month in schedule(interestrate, saleprice, result.principal_total, loanterm):
-                firstmonth = month
-                break
+            monthgen = schedule.schedule(interestrate, saleprice, result.principal_total, loanterm)
+            firstmonth = monthgen.__next__()
             cost.value = firstmonth.interestpmt * cost.calc
             result.apply(cost)
 
