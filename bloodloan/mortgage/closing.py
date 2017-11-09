@@ -215,12 +215,13 @@ def close(saleprice, interestrate, loanterm, propertytaxes, costs):
             cost.value = result.principal_total * mmath.percent2decimal(cost.calc)
             result.apply(cost)
         elif cost.calctype == CCCalcType.INTEREST_MONTHS:
-            # This is not a perfect way to do this calculation.
-            # This way assumes interest is the same in all months, which is not
-            # the case. However, we don't expect to get an INTEREST_MONTHS cost
-            # that is many months long, so we just assume here that the first
-            # month's interest is a good estimate of subsequent months'.
-            monthgen = schedule.schedule(interestrate, saleprice, result.principal_total, loanterm)
+            # TODO: Improve INTEREST_MONTHS closing cost calculation
+            # 1)    Assumes interest is the same in all months (not true)
+            #       OK because we don't expect INTEREST_MONTHS to be many months long
+            # 2)    Assumes saleprice == value
+            #       OK for now but should be fixed at some point
+            monthgen = schedule.schedule(
+                interestrate, saleprice, result.principal_total, saleprice, loanterm)
             firstmonth = monthgen.__next__()
             cost.value = firstmonth.interestpmt * cost.calc
             result.apply(cost)

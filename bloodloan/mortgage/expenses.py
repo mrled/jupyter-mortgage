@@ -107,6 +107,9 @@ def monthly_expenses(costs, saleprice, boyprincipal):
     """
     expenses = []
 
+    if not costs:
+        return expenses
+
     # deepcopy the costs during *every* iteration,
     # or else we keep doing expenses.append(cost) on the same cost each time
     for cost in copy.deepcopy(costs):
