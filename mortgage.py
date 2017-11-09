@@ -45,7 +45,8 @@ class LoanPayment:
             principal=0,
             value=0,
             equity=0,
-            totalinterest=0):
+            totalinterest=0,
+            othercosts=None):
         self.index = index
         self.regularpmt = regularpmt
         self.totalpmt = totalpmt
@@ -56,6 +57,7 @@ class LoanPayment:
         self.value = value
         self.equity = equity
         self.totalinterest = totalinterest
+        self.othercosts = othercosts or []
 
     def __str__(self):
         return " ".join([
@@ -70,18 +72,38 @@ class LoanPayment:
             f"Value({self.value})",
             f"Equity({self.equity})",
             f"TotalInterest({self.totalinterest})",
+            f"OtherCosts({self.totalothercosts}",
             ">"
         ])
 
+    @property
+    def totalothercosts(self):
+        """Total dollar amount for all othercosts"""
+        return sum([cost.value for cost in self.othercosts])
 
-def schedule(interestrate, value, principal, term, overpayments=None, appreciation=0):
+
+def schedule(
+        interestrate,
+        value,
+        principal,
+        saleprice,
+        term,
+        overpayments=None,
+        appreciation=0,
+        monthlycosts=None):
     """A schedule of payments, including overpayments
 
     interestrate    yearly interest rate of the loan
+    value           value of the property
+                    (what it would be worth when sold)
     principal       total amount of the loan
+                    (saleprice - downpayment + anything rolled in to loan)
+    saleprice       price actually paid for the property
+                    (when purchased)
     term            loan term in months
     overpayments    array of overpayment amounts for each month in the term
     appreciation    appreciation in decimal value representing percent
+    monthlycosts    list of MonthlyCost objects to apply
 
     yield           LoanPayment objects
 
@@ -108,9 +130,15 @@ def schedule(interestrate, value, principal, term, overpayments=None, appreciati
     log.info(f"Monthly payment calculated at {mpay}")
     monthidx = 0
     totalinterest = 0
+    # beginning-of-year principal
+    boyprincipal = principal
     while principal > 0:
         if monthidx > term:
             raise Exception("This should never happen")
+
+        if monthidx % 12 == 0:
+            boyprincipal = principal
+
         interestpmt = principal * monthlyrate(interestrate)
         totalinterest += interestpmt
         balancepmt = mpay - interestpmt
@@ -162,7 +190,8 @@ def schedule(interestrate, value, principal, term, overpayments=None, appreciati
             principal=principal,
             value=value,
             equity=value - principal,
-            totalinterest=totalinterest)
+            totalinterest=totalinterest,
+            othercosts=monthly_expenses(monthlycosts, saleprice, boyprincipal))
         # log.info(payment)
         yield payment
 
@@ -292,52 +321,50 @@ CAPEX_MONTHLY_COSTS = [
 ]
 
 
-def monthly_expenses(months, costs, saleprice):
+def monthly_expenses(costs, saleprice, boyprincipal):
     """Calculate monthly expenses
 
-    months  iterable of LoanPayment
-    costs   list of MonthlyCost objects
+    costs           list of MonthlyCost objects
+    saleprice       sale price of the property
+    boyprincipal    principal at beginning of year to calculate for
     """
+    expenses = []
 
-    for month in months:
+    if not costs:
+        return expenses
 
-        if month.index % 12 == 0:
-            year_start_principal = month.principal
+    # deepcopy the costs during *every* iteration,
+    # or else we keep doing expenses.append(cost) on the same cost each time
+    for cost in copy.deepcopy(costs):
 
-        expenses = []
+        # First, check our inputs
+        if cost.calctype == MCCalcType.DOLLAR_AMOUNT and cost.value is None:
+            raise Exception(
+                f"The {cost.label} MonthlyCost calctype is DOLLAR_AMOUNT, "
+                "but with an empty value property")
+        elif cost.calctype is not MCCalcType.DOLLAR_AMOUNT and cost.calc is None:
+            raise Exception(
+                f"The {cost.label} MonthlyCost calctype is {cost.calctype}, "
+                "but with an empty calc property")
 
-        # deepcopy the costs during *every* iteration,
-        # or else we keep doing expenses.append(cost) on the same cost each time
-        for cost in copy.deepcopy(costs):
+        # Now calculate what can be calculated now
+        # Don't calculate LOAN_FRACTION or INTEREST_MONTHS calctypes here,
+        # because any PRINCIPAL paytypes will affect their value
+        if cost.calctype is MCCalcType.DOLLAR_AMOUNT:
+            pass
+        elif cost.calctype is MCCalcType.YEARLY_PRINCIPAL_FRACTION:
+            cost.value = boyprincipal * util.percent2decimal(cost.calc) / MONTHS_IN_YEAR
+        elif cost.calctype is MCCalcType.SALE_FRACTION:
+            cost.value = saleprice * util.percent2decimal(cost.calc)
+        elif cost.calctype is MCCalcType.CAPEX:
+            cost.value = cost.calc.monthly
+        else:
+            raise NotImplementedError()
 
-            # First, check our inputs
-            if cost.calctype == MCCalcType.DOLLAR_AMOUNT and cost.value is None:
-                raise Exception(
-                    f"The {cost.label} MonthlyCost calctype is DOLLAR_AMOUNT, "
-                    "but with an empty value property")
-            elif cost.calctype is not MCCalcType.DOLLAR_AMOUNT and cost.calc is None:
-                raise Exception(
-                    f"The {cost.label} MonthlyCost calctype is {cost.calctype}, "
-                    "but with an empty calc property")
+        log.info(f"Calculating monthy expense: {cost}")
+        expenses.append(cost)
 
-            # Now calculate what can be calculated now
-            # Don't calculate LOAN_FRACTION or INTEREST_MONTHS calctypes here,
-            # because any PRINCIPAL paytypes will affect their value
-            if cost.calctype is MCCalcType.DOLLAR_AMOUNT:
-                pass
-            elif cost.calctype is MCCalcType.YEARLY_PRINCIPAL_FRACTION:
-                cost.value = year_start_principal * util.percent2decimal(cost.calc) / MONTHS_IN_YEAR
-            elif cost.calctype is MCCalcType.SALE_FRACTION:
-                cost.value = saleprice * util.percent2decimal(cost.calc)
-            elif cost.calctype is MCCalcType.CAPEX:
-                cost.value = cost.calc.monthly
-            else:
-                raise NotImplementedError()
-
-            log.info(f"Calculating monthy expense: {cost}")
-            expenses.append(cost)
-
-        yield expenses
+    return expenses
 
 
 class CCCalcType(Enum):
@@ -553,7 +580,8 @@ def close(saleprice, interestrate, loanterm, propertytaxes, costs):
             # that is many months long, so we just assume here that the first
             # month's interest is a good estimate of subsequent months'.
             firstmonth = None
-            for month in schedule(interestrate, saleprice, result.principal_total, loanterm):
+            # TODO: Assuming saleprice is value... this is probably wrong
+            for month in schedule(interestrate, saleprice, result.principal_total, saleprice, loanterm):
                 firstmonth = month
                 break
             cost.value = firstmonth.interestpmt * cost.calc

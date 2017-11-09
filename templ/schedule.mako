@@ -17,6 +17,7 @@ from mortgageui import dollar
     <th>Value</th>
     <th>Equity</th>
     <th>Total interest paid</th>
+    <th>Total other monthly costs</th>
 </tr>
 
 <tr>
@@ -31,6 +32,7 @@ from mortgageui import dollar
     <td>${dollar(value)}</td>
     <td>${dollar(0)}</td>
     <td>${dollar(0)}</td>
+    <td>
 </tr>
 
 %for payment in loanpayments:
@@ -45,6 +47,7 @@ from mortgageui import dollar
         <td>${dollar(payment.value)}</td>
         <td>${dollar(payment.equity)}</td>
         <td>${dollar(payment.totalinterest)}</td>
+        <td>${dollar(payment.totalothercosts)}</td>
     </tr>
 %endfor
 

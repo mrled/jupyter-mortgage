@@ -95,7 +95,7 @@ def wrap_close(saleprice, interestrate, loanterm, propertytaxes):
     return result
 
 
-def wrap_schedule(interestrate, value, principal, years, overpayment, appreciation):
+def wrap_schedule(interestrate, value, principal, saleprice, years, overpayment, appreciation):
     """Show a loan's mortgage schedule in a Jupyter notebook"""
 
     term = years * mortgage.MONTHS_IN_YEAR
@@ -105,10 +105,11 @@ def wrap_schedule(interestrate, value, principal, years, overpayment, appreciati
     # yearly payments for the mortgage schedule summary
     # and monthly payments with no overpayments for comparative analysis in prefacetempl
     months = [month for month in mortgage.schedule(
-        interestrate, value, principal, term,
-        overpayments=overpayments, appreciation=appreciation)]
+        interestrate, value, principal, saleprice, term,
+        overpayments=overpayments, appreciation=appreciation,
+        monthlycosts=mortgage.IRONHARBOR_FHA_MONTHLY_COSTS + mortgage.CAPEX_MONTHLY_COSTS)]
     months_no_over = [month for month in mortgage.schedule(
-        interestrate, value, principal, term, overpayments=None, appreciation=appreciation)]
+        interestrate, value, principal, saleprice, term, overpayments=None, appreciation=appreciation)]
     years = [year for year in mortgage.monthly2yearly_schedule(months)]
 
     prefacetempl = Template(filename='templ/schedule_preface.mako')
@@ -152,17 +153,17 @@ def wrap_schedule(interestrate, value, principal, years, overpayment, appreciati
     return months
 
 
-def wrap_monthly_expenses(schedule, costs, saleprice):
-    """Show monthly expenses"""
-    months = [month for month in mortgage.monthly_expenses(schedule, costs, saleprice)]
-    htmlstr = "<table>"
-    for midx, month in enumerate(months):
-        htmlstr += f"<tr><th>Month {midx + 1} total</th><th>{dollar(sum([e.value for e in month]))}</th></tr>"
-        for expense in month:
-            log.info(f"Retrieving calculated expense: '{expense}'")
-            htmlstr += f"<tr><td>{expense.label}</td><td>{dollar(expense.value)}</td></tr>"
-    htmlstr += "</table>"
-    display(HTML(htmlstr))
+# def wrap_monthly_expenses(schedule, costs, saleprice):
+#     """Show monthly expenses"""
+#     months = [month for month in mortgage.monthly_expenses(schedule, costs, saleprice)]
+#     htmlstr = "<table>"
+#     for midx, month in enumerate(months):
+#         htmlstr += f"<tr><th>Month {midx + 1} total</th><th>{dollar(sum([e.value for e in month]))}</th></tr>"
+#         for expense in month:
+#             log.info(f"Retrieving calculated expense: '{expense}'")
+#             htmlstr += f"<tr><td>{expense.label}</td><td>{dollar(expense.value)}</td></tr>"
+#     htmlstr += "</table>"
+#     display(HTML(htmlstr))
 
 
 def get_displayable_geocode(geocode, title):
@@ -261,12 +262,13 @@ def propertyinfo():
 
         # TODO: currently assuming sale price is value; allow changing to something else
         months = wrap_schedule(
-            interestrate, saleprice, closed.principal_total, years, overpayment, appreciation)
+            interestrate, saleprice, closed.principal_total, saleprice, years, overpayment,
+            appreciation)
 
-        wrap_monthly_expenses(
-            months,
-            mortgage.IRONHARBOR_FHA_MONTHLY_COSTS + mortgage.CAPEX_MONTHLY_COSTS,
-            saleprice)
+        # wrap_monthly_expenses(
+        #     months,
+        #     mortgage.IRONHARBOR_FHA_MONTHLY_COSTS + mortgage.CAPEX_MONTHLY_COSTS,
+        #     saleprice)
 
         global street_map_executor  # pylint: disable=W0603,C0103
         streetmap_container = ipywidgets.Box()
