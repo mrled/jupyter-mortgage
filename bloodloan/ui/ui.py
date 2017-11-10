@@ -181,18 +181,13 @@ def get_displayable_geocode(geocode, title):
     geocodes    list of GeocodeResult objects
     title       value for an <h3> element
 
-    return      an OutputChildren, for adding to the .children property of an ipywidgets.Box
+    return      a list of display()able outputs,
+                for passing to the append_display_data() method of an ipywidgets.Output
     """
-    result = util.OutputChildren()
+    result = []
 
-    result.display(HTML(f"<h3>{title}</h3>"))
-    result.display(HTML(f"<p><em>{geocode.displayname}</em></p>"))
-
-    property_info = ipywidgets.Box(layout=ipywidgets.Layout(
-        display='flex',
-        flex_flow='column',
-        align_items='stretch',
-        width='20em'))
+    result.append(HTML(f"<h3>{title}</h3>"))
+    result.append(HTML(f"<p><em>{geocode.displayname}</em></p>"))
 
     def info_row(label, value):
         """Return an informational row for displaying property info"""
@@ -205,14 +200,24 @@ def get_displayable_geocode(geocode, title):
                 flex_flow='row',
                 justify_content='space-between'))
 
-    property_info.children = (
-        info_row("County", geocode.county),
-        info_row("Neighborhood", geocode.neighborhood),
-        info_row("Latitude", geocode.coordinates[0]),
-        info_row("Longitude", geocode.coordinates[1]))
+    property_info = ipywidgets.Box(
+        children=(
+            info_row("County", geocode.county),
+            info_row("Neighborhood", geocode.neighborhood),
+            info_row("Latitude", geocode.coordinates[0]),
+            info_row("Longitude", geocode.coordinates[1])),
+        layout=ipywidgets.Layout(
+            display='flex',
+            flex_flow='column',
+            align_items='stretch',
+            width='20em'))
 
-    result.display(property_info)
-    result.display(geocode.figure)
+    result.append(property_info)
+    result.append(geocode.figure)
+
+    testhtml = HTML(f"<p>Test</p>")
+    log.info(f"Type of HTML: {type(testhtml)}")
+    log.info(f"Type of property_info: {type(property_info)}")
 
     return result
 
@@ -226,15 +231,15 @@ def wrap_streetmap(address, google_api_key=None):
         mapper = streetmap.OpenStreetMapper()
     geocodes = mapper.geocode(address)
 
-    result = util.OutputChildren()
-    result.display(util.html_hbox(f"Using {mapper} for maps", "info"))
-    result.display(HTML(f"<h2>Map & property information</h2>"))
+    displayables = []
+    displayables.append(util.html_hbox(f"Using {mapper} for maps", "info"))
+    displayables.append(HTML(f"<h2>Map & property information</h2>"))
 
     if len(geocodes) < 1:
-        result.display(
+        displayables.append(
             util.html_hbox(f"Could not find property at {address}", "danger"))
     elif len(geocodes) > 1:
-        result.display(
+        displayables.append(
             util.html_hbox(f"{len(geocodes)} matches returned for {address}", "warning"))
 
     for idx, geocode in enumerate(geocodes):
@@ -242,9 +247,10 @@ def wrap_streetmap(address, google_api_key=None):
             maptitle = f"Property {idx + 1}</h3>"
         else:
             maptitle = "Property information"
-        result += get_displayable_geocode(geocode, maptitle)
+        displayables.append(get_displayable_geocode(geocode, maptitle))
+        displayables += get_displayable_geocode(geocode, maptitle)
 
-    return result
+    return displayables
 
 
 street_map_executor = util.DelayedExecutor()  # pylint: disable=C0103
@@ -280,13 +286,11 @@ def propertyinfo():
         #     saleprice)
 
         global street_map_executor  # pylint: disable=W0603,C0103
-        streetmap_container = ipywidgets.Box()
+        # streetmap_container = ipywidgets.Box()
         street_map_executor.run(
-            streetmap_container,
             "Loading maps...",
             wrap_streetmap,
             action_args=(address, google_api_key))
-        display(streetmap_container)
 
     instructionstempl = Template(filename=os.path.join(TEMPL, 'instructions.mako'))
     display(HTML(instructionstempl.render()))

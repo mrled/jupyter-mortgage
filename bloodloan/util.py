@@ -21,13 +21,12 @@ class DelayedExecutor():
     def __init__(self):
         self.container = ipywidgets.VBox()
         self.stopevent = threading.Event()
+        self.output = None
         self.thread = None
-        self.progbar_container = None
         self.progresswidget = None
 
     def run(
             self,
-            output_container,
             progress_desc,
             action,
             action_args=None,
@@ -41,12 +40,12 @@ class DelayedExecutor():
         Instead, we must create a container widget, and then within the thread we can
         update its .children property to contain the items we wish to display
 
-        output_container    an ipywidgets.Box which the caller is responsible for displaying
+        output              an ipywidgets.Output which the caller is responsible for display()ing
         progress_desc       description for the progress widget
         action              a function to call when the timer elapses
                             it should NOT display widgets directly,
                             but should return a list of widgets/outputs
-                            that can be append to output_container.children
+                            that can be passed to output.append_display_data()
         action_args         a tuple of positional arguments for action
         action_kwargs       a dict of keyword arguments for action
         timerlength         length of delay
@@ -67,19 +66,12 @@ class DelayedExecutor():
             log.info("Old thread stopped")
         self.stopevent.clear()
 
+        # Wait to reset value / display the widget until the previous thread is cleaned up
         self.progresswidget.value = 0.0
+        display(self.progresswidget)
 
-        # Create new containers for our progress bar and thread output,
-        # put those in self.container,
-        # and append self.container to output_container.children,
-        # thereby throwing away existing *_container objects from a previous run()
-        # This lets us overwrite the children of self.container,
-        # without losing any preexisting children in container
-        self.progbar_container = ipywidgets.Box()
-        self.container.children = (self.progbar_container,)
-        output_container.children += (self.container,)
-
-        self.progbar_container.children = (self.progresswidget,)
+        self.output = ipywidgets.Output()
+        display(self.output)
 
         self.thread = threading.Thread(target=self.timer, args=(
             timerinterval, timerlength, action, action_args, action_kwargs))
@@ -95,6 +87,8 @@ class DelayedExecutor():
         action_kwargs   a dict containing keyword arguments to action
         """
 
+        closed_widget = False
+
         # .wait() returns True when stopevent.set() is called from a different thread;
         # until then, it will block until updateinterval elapses, at which point it returns False
         while not self.stopevent.wait(timerinterval):
@@ -102,29 +96,17 @@ class DelayedExecutor():
             self.progresswidget.value += timerinterval
             if self.progresswidget.value >= timerlength:
                 log.info("Stop event did not fire - calling action()")
-                self.container.children = ()
-                result = action(*action_args, **action_kwargs)
-                log.info(f"Got {len(result)} children to display in thread output container")
-                self.container.children = result
+                closed_widget = True
+                self.progresswidget.close()
+                results = action(*action_args, **action_kwargs)
+                log.info(f"Got {len(results)} children to display in thread output container")
+                for result in results:
+                    self.output.append_display_data(result)
                 self.stopevent.set() # Stop the loop
                 log.info("Sent stop event from within timer() - all done")
 
-        self.progbar_container.children = ()
-
-
-class OutputChildren(list):
-    """Helper class for building a tuple that can be added to an ipywidgets.Box.children"""
-
-    def display(self, displayable):
-        """Display an object to a new ipywidgets.Output(), and add that output to self"""
-        output = ipywidgets.Output()
-        with output:
-            display(displayable)
-        self.append(output)
-
-    def tuple(self):
-        """Convert the internal list to a tuple, before adding to an ipywidgets.Box.children"""
-        return tuple(self)
+        if not closed_widget:
+            self.progresswidget.close()
 
 
 def html_hbox(text, style):
