@@ -2,82 +2,57 @@
 
 It's a work-in-progress Jupyter notebook for mortgage calculations.
 
-I told Josiah I was doing this:
-
-> Writing a mortgage calculator in a Jupyter notebook
->
-> Which… might not be a great use of my time
->
-> But I decided it was more fun than learning the Excel macro language, so here we are
-
-He was not impressed:
-
-> I’m
->
-> Um
->
-> It’s Friday night
-
-But still. Here we are.
-
-## Running online
-
 You can use [Binder](https://mybinder.org/) to run this notebook online. No installation required!
 
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/mrled/jupyter-mortgage/master?filepath=MortgageWorksheet.ipynb)
 
+## VH1's BEHIND THE REPO
+
+I told Josiah I was doing this:
+
+> Writing a mortgage calculator in a Jupyter notebook  
+> Which… might not be a great use of my time  
+> But I decided it was more fun than learning the Excel macro language, so here we are
+
+He was not impressed:
+
+> I’m  
+> Um  
+> It’s Friday night
+
+But still. Here we are.
+
 ## Requirements / installation
 
-- [Python3](https://www.python.org/)
-- [Pandoc](http://pandoc.org/) (required for PDF generation from Jupyter)
-- [TeX Live](https://www.tug.org/texlive/) (required for PDF generation from Jupyter)
-- Python packages:
-    - gmaps
-    - googlemaps
-    - jupyter
-    - mako
-    - namedtupled
-- Jupyter packages:
-    - widgetsnbextension
-- A Google Maps API key ([create one here](https://console.developers.google.com/flows/enableapi?apiid=maps_backend,geocoding_backend,directions_backend,distance_matrix_backend,elevation_backend&keyType=CLIENT_SIDE&reusekey=true) for obtaining one)
+I use [`conda`](https://conda.io/) to handle dependencies.
 
-### Manual installation steps
+Set up the environment the first time:
 
-- [Python3](https://www.python.org/downloads/): install this via whatever is normal for your operating system, or directly from the official Python site.
-- [Pandoc](http://pandoc.org/installing.html): install this via the official installation instructions
-- [TeX Live](https://www.tug.org/texlive/acquire-netinstall.html): install this via the official installation instructions
+    # create the conda environment
+    conda env create -f environment.yml
 
-Now ensure that your `PATH` environment variable can find `python3` (possibly as `python`), `pandoc`, and the `TeX` binaries.
+Sse the environment to run the notebook:
 
-### Automatically installing remaining packages
+    # activate the environment
+    # bash:
+    source activate MortgageWorksheet
+    # powershell:
+    activate.ps1 MortgageWorksheet
 
-Once those packages are installed, you can use Python and Jupyter to install the remaining dependencies in a Python virtual environment
-
-    python3 -m ensurepip
-    python3 -m pip install virtualenv
-    python3 -m virtualenv venv
-    . venv/bin/activate
-    pip install jupyter gmaps googlemaps ipyleaflet mako namedtupled
-    jupyter nbextension install --py widgetsnbextension --user
-    jupyter nbextension enable --py gmaps
-    jupyter nbextension enable --py widgetsnbextension
-    jupyter nbextension enable --py --sys-prefix ipyleaflet
-
-### Running
-
-First, activate the virtual environment. This must be done once per shell, so if you're in the same shell session that you used to install the prereqs, you will not need to do this. That said, it doesn't hurt to do it more than once.
-
-    . venv/bin/activate
-
-Next, set an environment variable to hold your Google Maps API key:
-
-    export GOOGLE_API_KEY=AI...
-
-And then run Jupyter like normal:
-
+    # run the notebook
     jupyter notebook
 
-Finally, find the Jupyter notebook itself. Click on the `MortgageWorksheet.ipynb` file in the webpage that the previous step should have popped up.
+    # deactivate the environment when finished
+    deactivate
+
+Update the environment (e.g. if the prereqs change):
+
+    # update the conda environment
+    conda env update -f environment.yml
+
+### Other prerequisites
+
+By default, we use OpenStreetMap.org, which can be used without authentication. If you wish to use Google maps instead, you must procure a ([Google Maps API key](https://console.developers.google.com/flows/enableapi?apiid=maps_backend,geocoding_backend,directions_backend,distance_matrix_backend,elevation_backend&keyType=CLIENT_SIDE&reusekey=true)), and enter it in the appropriate field in the notebook.
 
 ## Roadmap
 

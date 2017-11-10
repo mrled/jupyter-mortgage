@@ -1,9 +1,28 @@
 name: MortgageWorksheet
+
+channels:
+  # Required for ipyleaflet
+  - conda-forge
+
 dependencies:
   - python=3.6
+
+  # Available thru pip, but comes in with the widgets (below) anyway
+  - jupyter
+
+  # All of these are available through pip
+  # However, these widgets require activation
+  # Conda activates automatically, but pip does not
+  # Installing them thru conda makes MyBinder work
+  - ipyleaflet
+  - gmaps
+  - googlemaps
+  - widgetsnbextension
+
   - pip:
-    - gmaps
-    - googlemaps
-    - ipyleaflet
+
+    # Find the setup.py for bloodloan in this directory and install it
+    - --editable=.
+
     - mako
     - namedtupled
