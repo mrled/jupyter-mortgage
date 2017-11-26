@@ -109,8 +109,9 @@ def wrap_schedule(interestrate, value, principal, saleprice, years, overpayment,
     monthlycosts = (
         expenses.IRONHARBOR_FHA_MONTHLY_COSTS +
         expenses.TEXAS_PROPERTY_TAXES_MONTHLY_COSTS +
+        expenses.MISC_MONTHLY_COSTS +
         expenses.CAPEX_MONTHLY_COSTS +
-        expenses.MISC_MONTHLY_COSTS)
+        [])
 
     # Calculate the monthly payments for the mortgage schedule detail,
     # yearly payments for the mortgage schedule summary
@@ -261,6 +262,11 @@ def propertyinfo():
 
         interestrate = mmath.percent2decimal(interestrate)
         appreciation = mmath.percent2decimal(appreciation)
+
+        # TODO: split out display and calculation
+        #       We're getting values like the 'closed' and 'months' variables from functions that
+        #       also display data to the end user;
+        #       instead, we should calculated them all at once and then display the results
 
         closed = wrap_close(saleprice, interestrate, years, propertytaxes)
 
