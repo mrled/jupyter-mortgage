@@ -5,6 +5,8 @@ import enum
 import logging
 
 from bloodloan.mortgage import mmath
+# TODO: This violates my abstraction a bit
+from bloodloan.ui import ui
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -15,9 +17,11 @@ class MCCalcType(enum.Enum):
 
     DOLLAR_AMOUNT               a raw dollar amount
     SALE_FRACTION               a percentage of the sale price
+    VALUE_FRACTION              a percentage of the property's current value
     YEARLY_PRINCIPAL_FRACTION   a percentage of the loan, calculated once per year,
                                 and paid monthly
     PROPERTY_TAX_FRACTION       a percentage of the first year of property taxes
+    MONTHLY_RENT_FRACTION       a percentage of projected rent received from property
     CAPEX                       the calc property is an MCCapEx
     """
     DOLLAR_AMOUNT = enum.auto()
@@ -27,6 +31,25 @@ class MCCalcType(enum.Enum):
     PROPERTY_TAX_FRACTION = enum.auto()
     MONTHLY_RENT_FRACTION = enum.auto()
     CAPEX = enum.auto()
+
+    def __str__(self):
+        #"""Provide a description for the basis of the calculation"""
+        if self is MCCalcType.DOLLAR_AMOUNT:
+            return "constant dollar amount"
+        elif self is MCCalcType.SALE_FRACTION:
+            return "sale price"
+        elif self is MCCalcType.VALUE_FRACTION:
+            return "property value"
+        elif self is MCCalcType.YEARLY_PRINCIPAL_FRACTION:
+            return "BOY remaining principal"
+        elif self is MCCalcType.PROPERTY_TAX_FRACTION:
+            return "property tax"
+        elif self is MCCalcType.MONTHLY_RENT_FRACTION:
+            return "monthly rent"
+        elif self is MCCalcType.CAPEX:
+            return "capital expenditure"
+        else:
+            raise NotImplementedError(f"No description for calculations of type {self}")
 
 
 class MCCapEx():
@@ -42,6 +65,9 @@ class MCCapEx():
         self.total = cost
         self.lifespan = lifespan
         self.monthly = cost / lifespan / mmath.MONTHS_IN_YEAR
+
+    def __str__(self):
+        return f"{ui.dollar(self.total)} over {self.lifespan} years"
 
 
 class MonthlyCost():
@@ -76,11 +102,11 @@ class MonthlyCost():
     def calcstr(self):
         """A nice string to explain how the calculation is done"""
         if self.calctype is MCCalcType.DOLLAR_AMOUNT:
-            return "Dollar amount"
+            return self.calctype
         elif self.calctype is MCCalcType.CAPEX:
-            return f"${self.calc.total}/{self.calc.lifespan}y"
+            return self.calc
         else:
-            return f"{self.calc}% of {self.calctype}"
+            return f"{mmath.decimal2percent(self.calc)}% of {str(self.calctype)}"
 
     def __str__(self):
         return f"{self.label} - ${self.value} ({self.calcstr})"
