@@ -67,7 +67,8 @@ def toggleinputcells():
             }
             show_inputs = !show_inputs;
         }
-        $(document).ready(toggleinputs);
+        // Uncomment this to automatically hide input cells when notebook is run:
+        //$(document).ready(toggleinputs);
         </script>
         '''))
 
@@ -75,18 +76,12 @@ def toggleinputcells():
     display(HTML('''
         <h2>Modifying this notebook</h2>
 
-        <p>Input code for this notebook is by default hidden for easier reading.</p>
+        <p>Input code for this notebook can be hidden for easier reading (and printing).</p>
         <p>
             For simple inputs, you may not need to view the code;
             you can change values like sale price and interest rate using the GUI widgets.
             For more complex inputs, such as defining a new set of closing costs,
             you will need to enable input code display, and create a list of closing costs in inline Python.
-        </p>
-        <p>
-            Note: If you're reading this message in another notebook frontend
-            (for example, a static rendering on GitHub or NBViewer),
-            you will not see the rest of the notebook.
-            You must run the notebook from Jupyter itself.
         </p>
         <p><button onclick="toggleinputs()">Toggle input code display</button></p>
         <hr/>
