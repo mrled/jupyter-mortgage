@@ -17,7 +17,7 @@ from bloodloan.ui.ui import dollar
     <th>Value</th>
     <th>Equity</th>
     <th>Total interest paid</th>
-    <th>Total other monthly costs</th>
+    <th>Total other costs</th>
 </tr>
 
 <tr>

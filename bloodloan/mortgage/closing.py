@@ -69,8 +69,11 @@ class ClosingCost():
         self.calctype = calctype
         self.paytype = paytype
 
-    def __repr__(self):
+    def __str__(self):
         return f"{self.label} - {self.value} ({self.paytype.name})"
+
+    def __repr__(self):
+        return str(self)
 
 
 IRONHARBOR_FHA_CLOSING_COSTS = [

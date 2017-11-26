@@ -72,11 +72,14 @@ class MonthlyCost():
 
     def __str__(self):
         result = f"{self.label} - ${self.value}"
-        if self.calctype is MCCapEx:
-            result += f" (${self.calctype.total}/{self.calctype.lifespan}y)"
+        if self.calctype is MCCalcType.CAPEX:
+            result += f" (${self.calc.total}/{self.calc.lifespan}y)"
         elif self.calctype is not MCCalcType.DOLLAR_AMOUNT:
             result += f" ({self.calc}% of {self.calctype})"
         return result
+
+    def __repr__(self):
+        return str(self)
 
 
 IRONHARBOR_FHA_MONTHLY_COSTS = [

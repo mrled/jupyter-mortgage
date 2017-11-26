@@ -50,9 +50,12 @@ class LoanPayment:
             f"Value({self.value})",
             f"Equity({self.equity})",
             f"TotalInterest({self.totalinterest})",
-            f"OtherCosts({self.totalothercosts}",
+            f"OtherCosts({self.totalothercosts})",
             ">"
         ])
+
+    def __repr__(self):
+        return str(self)
 
     @property
     def totalothercosts(self):
@@ -145,7 +148,8 @@ def schedule(
                 overpmt = principal - balancepmt
                 principal = 0
             elif balancepmt > principal:
-                logger.info(f"#{monthidx}: Truncating balance payment to {balancepmt} in final month")
+                logger.info(
+                    f"#{monthidx}: Truncating balance payment to {balancepmt} in final month")
                 overpmt = 0
                 balancepmt = principal
                 principal = 0
@@ -157,6 +161,7 @@ def schedule(
 
         monthapprec = appreciation / mmath.MONTHS_IN_YEAR
         value = value * (1 + monthapprec)
+        othercosts = expenses.monthly_expenses(monthlycosts, saleprice, boyprincipal)
 
         payment = LoanPayment(
             index=monthidx,
@@ -169,8 +174,8 @@ def schedule(
             value=value,
             equity=value - principal,
             totalinterest=totalinterest,
-            othercosts=expenses.monthly_expenses(monthlycosts, saleprice, boyprincipal))
-        # log.info(payment)
+            othercosts=othercosts)
+
         yield payment
 
         monthidx += 1
@@ -198,6 +203,8 @@ def monthly2yearly_schedule(months):
         year.interestpmt += month.interestpmt
         year.balancepmt += month.balancepmt
         year.overpmt += month.overpmt
+        year.othercosts += month.othercosts
+
         # Overwrites:
         year.principal = month.principal
         year.value = month.value
