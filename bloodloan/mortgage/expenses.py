@@ -2,9 +2,12 @@
 
 import copy
 import enum
+import logging
 
-from bloodloan.log import LOG as log
 from bloodloan.mortgage import mmath
+
+
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 class MCCalcType(enum.Enum):
@@ -139,7 +142,7 @@ def monthly_expenses(costs, saleprice, boyprincipal):
         else:
             raise NotImplementedError()
 
-        log.info(f"Calculating monthy expense: {cost}")
+        logger.info(f"Calculating monthy expense: {cost}")
         expenses.append(cost)
 
     return expenses

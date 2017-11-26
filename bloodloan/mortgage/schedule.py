@@ -1,8 +1,12 @@
 """Mortgage schedule"""
 
-from bloodloan.log import LOG as log
+import logging
+
 from bloodloan.mortgage import expenses
 from bloodloan.mortgage import mmath
+
+
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 class LoanPayment:
@@ -101,7 +105,7 @@ def schedule(
     """
     overpayments = overpayments or []
     mpay = mmath.monthly_payment(interestrate, principal, term)
-    log.info(f"Monthly payment calculated at {mpay}")
+    logger.info(f"Monthly payment calculated at {mpay}")
     monthidx = 0
     totalinterest = 0
     # beginning-of-year principal
@@ -123,13 +127,13 @@ def schedule(
 
         if principal <= 0:
             # Break before the yield so we don't get empty lines
-            log.info(f"#{monthidx}: Principal {principal} is <= 0 in final month")
+            logger.info(f"#{monthidx}: Principal {principal} is <= 0 in final month")
             break
         elif principal < 0.01:
             # Also break if the principal is less than a cent
             # This prevents a weird payment that looks like it's for $0,
             # but actually is a rounded-down fraction of a cent
-            log.info(
+            logger.info(
                 f"#{monthidx}: Ignoring remaining principal of {principal} "
                 "because it is a fraction of a cent in final month")
             break
@@ -137,18 +141,18 @@ def schedule(
             # Paying the normal amount will result in overpaying in the final month
             # Handle this by adjusting the balancepmt and overpmt
             if principal - balancepmt > 0:
-                log.info(f"#{monthidx}: Truncating overpayment to {overpmt} in final month")
+                logger.info(f"#{monthidx}: Truncating overpayment to {overpmt} in final month")
                 overpmt = principal - balancepmt
                 principal = 0
             elif balancepmt > principal:
-                log.info(f"#{monthidx}: Truncating balance payment to {balancepmt} in final month")
+                logger.info(f"#{monthidx}: Truncating balance payment to {balancepmt} in final month")
                 overpmt = 0
                 balancepmt = principal
                 principal = 0
             else:
                 raise Exception("This should not happen")
         else:
-            log.debug(f"#{monthidx}: Paying normal amounts in non-final month")
+            logger.debug(f"#{monthidx}: Paying normal amounts in non-final month")
             principal = principal - balancepmt - overpmt
 
         monthapprec = appreciation / mmath.MONTHS_IN_YEAR

@@ -2,6 +2,7 @@
 
 """Jupyter wrappers for displaying mortgage information"""
 
+import logging
 import os
 
 from IPython.display import (
@@ -12,7 +13,6 @@ import ipywidgets
 
 from mako.template import Template
 
-from bloodloan.log import LOG as log
 from bloodloan import util
 from bloodloan.mortgage import closing
 from bloodloan.mortgage import expenses
@@ -23,6 +23,7 @@ from bloodloan.ui import streetmap
 
 SCRIPTDIR = os.path.dirname(os.path.realpath(__file__))
 TEMPL = os.path.join(SCRIPTDIR, 'templ')
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 def dollar(amount):

@@ -2,12 +2,14 @@
 
 """Utilities for jupyter-mortgage"""
 
+import logging
 import threading
 
 from IPython.display import display
 import ipywidgets
 
-from bloodloan.log import LOG as log
+
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 class DelayedExecutor():
@@ -62,9 +64,9 @@ class DelayedExecutor():
         self.stopevent.set()
         if self.thread is not None:
             # block until self.thread terminates (for self.timerinterval secs or shorter)
-            log.info("Stopping old thread...")
+            logger.info("Stopping old thread...")
             self.thread.join()
-            log.info("Old thread stopped")
+            logger.info("Old thread stopped")
         self.stopevent.clear()
 
         self.progresswidget.value = 0.0
@@ -101,13 +103,13 @@ class DelayedExecutor():
 
             self.progresswidget.value += timerinterval
             if self.progresswidget.value >= timerlength:
-                log.info("Stop event did not fire - calling action()")
+                logger.info("Stop event did not fire - calling action()")
                 self.container.children = ()
                 result = action(*action_args, **action_kwargs)
-                log.info(f"Got {len(result)} children to display in thread output container")
+                logger.info(f"Got {len(result)} children to display in thread output container")
                 self.container.children = result
                 self.stopevent.set() # Stop the loop
-                log.info("Sent stop event from within timer() - all done")
+                logger.info("Sent stop event from within timer() - all done")
 
         self.progbar_container.children = ()
 

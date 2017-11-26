@@ -2,10 +2,13 @@
 
 import copy
 import enum
+import logging
 
-from bloodloan.log import LOG as log
 from bloodloan.mortgage import mmath
 from bloodloan.mortgage import schedule
+
+
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 class CCCalcType(enum.Enum):
@@ -144,7 +147,7 @@ class CloseResult:
 
     def apply(self, cost):
         """Add a ClosingCost"""
-        log.info(f"Closing cost: {cost}")
+        logger.info(f"Closing cost: {cost}")
 
         if cost.paytype == CCPayType.PRINCIPAL:
             self.principal.append(cost)
