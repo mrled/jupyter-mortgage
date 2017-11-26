@@ -106,15 +106,21 @@ def wrap_schedule(interestrate, value, principal, saleprice, years, overpayment,
     term = years * mmath.MONTHS_IN_YEAR
     overpayments = [overpayment for _ in range(term)]
 
+    monthlycosts = (
+        expenses.IRONHARBOR_FHA_MONTHLY_COSTS +
+        expenses.TEXAS_PROPERTY_TAXES_MONTHLY_COSTS +
+        expenses.CAPEX_MONTHLY_COSTS +
+        expenses.MISC_MONTHLY_COSTS)
+
     # Calculate the monthly payments for the mortgage schedule detail,
     # yearly payments for the mortgage schedule summary
     # and monthly payments with no overpayments for comparative analysis in prefacetempl
     months = [month for month in schedule.schedule(
         interestrate, value, principal, saleprice, term,
-        overpayments=overpayments, appreciation=appreciation,
-        monthlycosts=expenses.IRONHARBOR_FHA_MONTHLY_COSTS + expenses.CAPEX_MONTHLY_COSTS)]
+        overpayments=overpayments, appreciation=appreciation, monthlycosts=monthlycosts)]
     months_no_over = [month for month in schedule.schedule(
-        interestrate, value, principal, saleprice, term, overpayments=None, appreciation=appreciation)]
+        interestrate, value, principal, saleprice, term,
+        overpayments=None, appreciation=appreciation)]
     years = [year for year in schedule.monthly2yearly_schedule(months)]
 
     prefacetempl = Template(filename=os.path.join(TEMPL, 'schedule_preface.mako'))
@@ -169,6 +175,12 @@ def wrap_schedule(interestrate, value, principal, saleprice, years, overpayment,
 #             htmlstr += f"<tr><td>{expense.label}</td><td>{dollar(expense.value)}</td></tr>"
 #     htmlstr += "</table>"
 #     display(HTML(htmlstr))
+
+
+def wrap_monthly_expense_breakdown(firstmonth):
+    """Show monthly expense breakdown"""
+    exptempl = Template(filename=os.path.join(TEMPL, 'monthlycosts.mako'))
+    display(HTML(exptempl.render(firstmonth=firstmonth)))
 
 
 def get_displayable_geocode(geocode, title):
@@ -275,6 +287,8 @@ def propertyinfo():
         #     expenses.IRONHARBOR_FHA_MONTHLY_COSTS + expenses.CAPEX_MONTHLY_COSTS,
         #     saleprice)
 
+        wrap_monthly_expense_breakdown(months[0])
+
         global street_map_executor  # pylint: disable=W0603,C0103
         streetmap_container = ipywidgets.Box()
         street_map_executor.run(
@@ -327,6 +341,9 @@ def propertyinfo():
         value="1600 Pennsylvania Ave NW, Washington, DC 20500"))
     google_api_key = util.label_widget("Google API key (optional)", widgets_box, ipywidgets.Text(
         value=""))
+
+    # TODO: pass in property tax estimate to monthly cost
+    # TODO: take in monthly costs from the notebook, not hardcoded
 
     output = ipywidgets.interactive_output(metawrapper, {
         'interestrate': interestrate,

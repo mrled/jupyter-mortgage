@@ -71,7 +71,8 @@ def schedule(
         term,
         overpayments=None,
         appreciation=0,
-        monthlycosts=None):
+        monthlycosts=None,
+        monthlyrent=0):
     """A schedule of payments, including overpayments
 
     interestrate    yearly interest rate of the loan
@@ -85,6 +86,7 @@ def schedule(
     overpayments    array of overpayment amounts for each month in the term
     appreciation    appreciation in decimal value representing percent
     monthlycosts    list of MonthlyCost objects to apply
+    monthlyrent     projected monthly rent for the property
 
     yield           LoanPayment objects
 
@@ -161,7 +163,8 @@ def schedule(
 
         monthapprec = appreciation / mmath.MONTHS_IN_YEAR
         value = value * (1 + monthapprec)
-        othercosts = expenses.monthly_expenses(monthlycosts, saleprice, boyprincipal)
+        othercosts = expenses.monthly_expenses(
+            monthlycosts, saleprice, value, boyprincipal, monthlyrent)
 
         payment = LoanPayment(
             index=monthidx,

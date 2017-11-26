@@ -22,8 +22,10 @@ class MCCalcType(enum.Enum):
     """
     DOLLAR_AMOUNT = enum.auto()
     SALE_FRACTION = enum.auto()
+    VALUE_FRACTION = enum.auto()
     YEARLY_PRINCIPAL_FRACTION = enum.auto()
     PROPERTY_TAX_FRACTION = enum.auto()
+    MONTHLY_RENT_FRACTION = enum.auto()
     CAPEX = enum.auto()
 
 
@@ -70,13 +72,18 @@ class MonthlyCost():
         self.calc = calc
         self.calctype = calctype
 
+    @property
+    def calcstr(self):
+        """A nice string to explain how the calculation is done"""
+        if self.calctype is MCCalcType.DOLLAR_AMOUNT:
+            return "Dollar amount"
+        elif self.calctype is MCCalcType.CAPEX:
+            return f"${self.calc.total}/{self.calc.lifespan}y"
+        else:
+            return f"{self.calc}% of {self.calctype}"
+
     def __str__(self):
-        result = f"{self.label} - ${self.value}"
-        if self.calctype is MCCalcType.CAPEX:
-            result += f" (${self.calc.total}/{self.calc.lifespan}y)"
-        elif self.calctype is not MCCalcType.DOLLAR_AMOUNT:
-            result += f" ({self.calc}% of {self.calctype})"
-        return result
+        return f"{self.label} - ${self.value} ({self.calcstr})"
 
     def __repr__(self):
         return str(self)
@@ -84,32 +91,133 @@ class MonthlyCost():
 
 IRONHARBOR_FHA_MONTHLY_COSTS = [
     MonthlyCost(
-        label="Mortgage insurance",
+        label="Mortgage insurance estimate",
         calc=0.85,
         calctype=MCCalcType.YEARLY_PRINCIPAL_FRACTION),
 
     # TODO: This is not very precise - I think I'm calculating it wrong
     #       Looking at different sale prices, it goes between 0.0342% and 0.045%
     MonthlyCost(
-        label="Hazard insurance (AKA homeowners insurance)",
+        label="Hazard insurance (AKA homeowners insurance) estimate",
         calc=0.04,
-        calctype=MCCalcType.SALE_FRACTION)
+        calctype=MCCalcType.SALE_FRACTION),
 ]
-CAPEX_MONTHLY_COSTS = [
-    # TODO: Double check this, and complete this list
+
+TEXAS_PROPERTY_TAXES_MONTHLY_COSTS = [
     MonthlyCost(
-        label="New roof",
+        label="Property taxes estimate - 2.0%",
+        # I just google'd for an average and rounded up a bit;
+        # users with more precise knowledge should not use this cost,
+        # and define their own instead
+        calc=0.020,
+        calctype=MCCalcType.VALUE_FRACTION),
+]
+
+CAPEX_MONTHLY_COSTS = [
+    MonthlyCost(
+        # Source: hearsay. Is this too high? I'm seeing wildly varying numbers here
+        label="Roof",
         calc=MCCapEx(12_000, 25),
-        calctype=MCCalcType.CAPEX)
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        # Source: hearsay
+        label="Water heater",
+        calc=MCCapEx(600, 10),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        # Source: Total guess
+        label="Refrigerator",
+        calc=MCCapEx(1000, 10),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        # Source: Total guess
+        label="Oven / stovetop",
+        calc=MCCapEx(600, 10),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        # Source: hearsay
+        label="Dishwasher",
+        calc=MCCapEx(600, 10),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        # Source: TBORPI
+        label="Driveway",
+        calc=MCCapEx(5000, 50),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        # Source: https://www.angieslist.com/articles/how-much-does-installing-new-ac-cost.htm
+        label="Air conditioner",
+        calc=MCCapEx(5_500, 10),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        # Source: ttps://www.angieslist.com/articles/how-much-does-it-cost-install-new-furnace.htm
+        label="Heater / furnace",
+        calc=MCCapEx(4_500, 10),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        # Source: hearsay
+        # TODO: A way to calculate based on square footage?
+        label="Flooring",
+        calc=MCCapEx(3_000, 5),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        # Source: TBORPI
+        label="Plumbing",
+        calc=MCCapEx(3_000, 30),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        label="Windows",
+        calc=MCCapEx(5_000, 50),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        label="Paint",
+        calc=MCCapEx(2_500, 5),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        label="Cabinets and countertops",
+        calc=MCCapEx(3_000, 20),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        label="Structure (foundation / framing)",
+        calc=MCCapEx(10_000, 50),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        label="Components (garage door, etc)",
+        calc=MCCapEx(1_000, 10),
+        calctype=MCCalcType.CAPEX),
+    MonthlyCost(
+        label="Landscaping",
+        calc=MCCapEx(1_000, 10),
+        calctype=MCCalcType.CAPEX),
+]
+
+MISC_MONTHLY_COSTS = [
+    MonthlyCost(
+        label="Vacancy estimate (5%)",
+        calc=0.05,
+        calctype=MCCalcType.MONTHLY_RENT_FRACTION),
+    MonthlyCost(
+        label="Miscellaneous / unexpected repairs (10%)",
+        calc=0.10,
+        calctype=MCCalcType.MONTHLY_RENT_FRACTION),
+    MonthlyCost(
+        label="Property management estimate (10%)",
+        calc=0.10,
+        calctype=MCCalcType.MONTHLY_RENT_FRACTION),
+    MonthlyCost(
+        label="Lawn care estimate",
+        value=100),
 ]
 
 
-def monthly_expenses(costs, saleprice, boyprincipal):
+def monthly_expenses(costs, saleprice, propvalue, boyprincipal, rent):
     """Calculate monthly expenses
 
     costs           list of MonthlyCost objects
     saleprice       sale price of the property
+    propvalue       actual value of the property
     boyprincipal    principal at beginning of year to calculate for
+    rent            projected monthly rent for the property
     """
     expenses = []
 
@@ -140,10 +248,15 @@ def monthly_expenses(costs, saleprice, boyprincipal):
             cost.value = boyprincipal * fraction / mmath.MONTHS_IN_YEAR
         elif cost.calctype is MCCalcType.SALE_FRACTION:
             cost.value = saleprice * mmath.percent2decimal(cost.calc)
+        elif cost.calctype is MCCalcType.VALUE_FRACTION:
+            cost.value = propvalue * mmath.percent2decimal(cost.calc)
+        elif cost.calctype is MCCalcType.MONTHLY_RENT_FRACTION:
+            cost.value = rent * mmath.percent2decimal(cost.calc)
         elif cost.calctype is MCCalcType.CAPEX:
             cost.value = cost.calc.monthly
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(
+                f"Cannot process a cost with a calctype of {cost.calctype}")
 
         logger.info(f"Calculating monthy expense: {cost}")
         expenses.append(cost)
