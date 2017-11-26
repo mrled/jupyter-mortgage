@@ -54,6 +54,55 @@ Update the environment (e.g. if the prereqs change):
 
 By default, we use OpenStreetMap.org, which can be used without authentication. If you wish to use Google maps instead, you must procure a ([Google Maps API key](https://console.developers.google.com/flows/enableapi?apiid=maps_backend,geocoding_backend,directions_backend,distance_matrix_backend,elevation_backend&keyType=CLIENT_SIDE&reusekey=true)), and enter it in the appropriate field in the notebook.
 
+## Defining custom calculations
+
+Items like clothing costs and monthly expenditures are highly variable. Some defaults and reasonable general-purpose estimates are provided in hardcoded constants in modules, but it will be possible to specify more precise figures by adding them directly in the workbook (without needing to modify the Python modules).
+
+Use `bloodloan.mortgage.closing.ClosingCost` to create a new closing cost.
+See the `IRONHARBOR_FHA_CLOSING_COSTS` const list from the same module for examples.
+
+Use `bloodloan.mortgage.expenses.MonthlyCost` to create a new monthly expense.
+See various const lists named `*_MONTHLY_COSTS` from the same module for examples.
+
+In addition to the examples hardcoded in the module, you may want to consider the following (from TBORPI pp. 100-101):
+
+- Taxes
+- Insurance
+- Flood Insurance (if needed)
+- Vacancy
+- Repairs
+- Capital expenditures
+- Water
+- Sewer
+- Garbage
+- Gas
+- Electricity
+- HOA (home owner’s association) fees (if applicable)
+- Snow removal
+- Lawn care
+- Property management
+
+Capital expenditures deserve special mention, because they can be broken out into individual items.
+You may want to consider the following (from TBORPI p. 103):
+
+- Roof
+- Water heater
+- Appliances (total)
+- Driveway
+- HVAC
+- Flooring
+- Plumbing
+- Windows
+- Paint
+- Cabinets and countertops
+- Structure (foundation and framing)
+- Components (garage door etc)
+- Landscaping
+
+## Notes on recommendations
+
+I get a lot of information from the fantastic [Book on Rental Property Investing](https://www.amazon.com/Book-Rental-Property-Investing-Intelligent/dp/099071179X?&_encoding=UTF8&tag=mrled-20&linkCode=ur2&linkId=3f16a626fa749912a1e1e10bbac44031&camp=1789&creative=9325). (TIA: affiliate link.) I occasionally refer to this as TBORPI for brevity.
+
 ## Roadmap
 
 OK, I don't actually have a roadmap, but here are a few things I would like to support in the future:
@@ -65,6 +114,9 @@ OK, I don't actually have a roadmap, but here are a few things I would like to s
 - Record various property facts: historical rent in area, historical sell price in area, etc
 - Calculate ROI after certain period of time (e.g. closing costs + mortgage payments vs cash when you sell)
 - Calculate COCROI (cash-on-cash ROI, aka the return on investment just off monthly cashflow, not including principal or appreciation)
+- Show "percent rules" e.g. 1% rule or 3% rule or whatever - what percentage of total loan (or is it principal?) is monthly rent?
+- Calculate some numbers for recommended reserve cash on hand - maybe start with a six-month recommendation (per TBORPI)
+- UI to show details on "house hack" type properties
 
 Some really nice stuff might be:
 - Automatically retrieve historical data about rents/sale prices in the area (from where?)
