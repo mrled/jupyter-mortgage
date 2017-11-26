@@ -13,16 +13,16 @@ from bloodloan.ui.ui import dollar
     <th>Interest</th>
     <th>Balance</th>
     <th>Overpayment</th>
+    <th>Other costs</th>
     <th>Remaining principal</th>
     <th>Value</th>
     <th>Equity</th>
     <th>Total interest paid</th>
-    <th>Total other costs</th>
 </tr>
 
 <tr>
     <td>Initial loan amount</td>
-    ## <td>${dollar(loanpayments[0].regularpmt)}</td>
+    <td></td>
     <td></td>
     <td></td>
     <td></td>
@@ -32,7 +32,6 @@ from bloodloan.ui.ui import dollar
     <td>${dollar(value)}</td>
     <td>${dollar(0)}</td>
     <td>${dollar(0)}</td>
-    <td>
 </tr>
 
 %for payment in loanpayments:
@@ -43,11 +42,11 @@ from bloodloan.ui.ui import dollar
         <td>${dollar(payment.interestpmt)}</td>
         <td>${dollar(payment.balancepmt)}</td>
         <td>${dollar(payment.overpmt)}</td>
+        <td>${dollar(payment.totalothercosts)}</td>
         <td>${dollar(payment.principal)}</td>
         <td>${dollar(payment.value)}</td>
         <td>${dollar(payment.equity)}</td>
         <td>${dollar(payment.totalinterest)}</td>
-        <td>${dollar(payment.totalothercosts)}</td>
     </tr>
 %endfor
 
