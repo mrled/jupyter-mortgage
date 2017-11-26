@@ -26,3 +26,6 @@ dependencies:
 
     - mako
     - namedtupled
+
+    # Useful in VS code, not required otherwise
+    - pylint
