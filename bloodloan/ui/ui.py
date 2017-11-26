@@ -164,19 +164,6 @@ def wrap_schedule(interestrate, value, principal, saleprice, years, overpayment,
     return months
 
 
-# def wrap_monthly_expenses(schedule, costs, saleprice):
-#     """Show monthly expenses"""
-#     months = [month for month in mortgage.monthly_expenses(schedule, costs, saleprice)]
-#     htmlstr = "<table>"
-#     for midx, month in enumerate(months):
-#         htmlstr += f"<tr><th>Month {midx + 1} total</th><th>{dollar(sum([e.value for e in month]))}</th></tr>"
-#         for expense in month:
-#             log.info(f"Retrieving calculated expense: '{expense}'")
-#             htmlstr += f"<tr><td>{expense.label}</td><td>{dollar(expense.value)}</td></tr>"
-#     htmlstr += "</table>"
-#     display(HTML(htmlstr))
-
-
 def wrap_monthly_expense_breakdown(firstmonth):
     """Show monthly expense breakdown"""
     exptempl = Template(filename=os.path.join(TEMPL, 'monthlycosts.mako'))
@@ -281,11 +268,6 @@ def propertyinfo():
         months = wrap_schedule(
             interestrate, saleprice, closed.principal_total, saleprice, years, overpayment,
             appreciation)
-
-        # wrap_monthly_expenses(
-        #     months,
-        #     expenses.IRONHARBOR_FHA_MONTHLY_COSTS + expenses.CAPEX_MONTHLY_COSTS,
-        #     saleprice)
 
         wrap_monthly_expense_breakdown(months[0])
 
