@@ -1,22 +1,25 @@
 <%page args="interestrate, principal, term, overpayment, appreciation, monthlypayments, monthlypayments_no_over" />
 
 <%!
-from bloodloan.mortgage.mmath import MONTHS_IN_YEAR, decimal2percent
-from bloodloan.ui.ui import dollar
+from bloodloan.mortgage.mmath import MONTHS_IN_YEAR
+from bloodloan.ui.ui import dollar, percent
 %>
 
 <h2>Mortgage amortization schedule</h2>
 
-<p>Amortization schedule for a <span>${dollar(principal)}</span> loan over ${term} months at ${decimal2percent(interestrate)}% interest.</p>
+<p>Amortization schedule for a <span>${dollar(principal)}</span> loan over ${term} months at ${percent(interestrate)} interest.</p>
 
-<p>Expect the property to appreciate ${decimal2percent(appreciation)}% each year.</p>
+<p>Expect the property to appreciate ${percent(appreciation)} each year.</p>
 
 %if overpayment != 0:
     <p>
         With a monthy overpayment of ${dollar(overpayment)},
-        you can expect to pay off the loan in ${int(len(monthlypayments) / MONTHS_IN_YEAR)} years (${len(monthlypayments)} months),
-        or approximately ${int((len(monthlypayments_no_over) - len(monthlypayments)) / MONTHS_IN_YEAR)} years (${len(monthlypayments_no_over) - len(monthlypayments)} months)
-        faster than the initial ${int(len(monthlypayments_no_over) / MONTHS_IN_YEAR)} year (${len(monthlypayments_no_over)} month) term.
+        you can expect to pay off the loan in approximately ${int(len(monthlypayments) / MONTHS_IN_YEAR)} years
+        (exactly ${len(monthlypayments)} months),
+        or approximately ${int((len(monthlypayments_no_over) - len(monthlypayments)) / MONTHS_IN_YEAR)} years
+        (exactly ${len(monthlypayments_no_over) - len(monthlypayments)} months)
+        faster than the initial approximate ${int(len(monthlypayments_no_over) / MONTHS_IN_YEAR)} year
+        (exact ${len(monthlypayments_no_over)} month) term.
     </p>
     <p>
         This means you will pay <span>${dollar(monthlypayments[-1].totalinterest)}</span> in interest over the term of the loan,

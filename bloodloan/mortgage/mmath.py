@@ -10,7 +10,12 @@ def percent2decimal(percent):
 
 
 def decimal2percent(decimal):
-    """Take a decimal, such as 0.035, and convert it to a percentage, such as 3.5"""
+    """Take a decimal, such as 0.035, and convert it to a percentage, such as 3.5
+
+    Note that it is not generally reasonable to chain percent2decimal and decimal2percent calls,
+    especially repeatedly.
+    Consider using bloodloan.ui.percent() when trying to display a decimal value as a percentage.
+    """
     return decimal * 100
 
 

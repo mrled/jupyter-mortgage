@@ -106,7 +106,7 @@ class MonthlyCost():
         elif self.calctype is MCCalcType.CAPEX:
             return self.calc
         else:
-            return f"{mmath.decimal2percent(self.calc)}% of {str(self.calctype)}"
+            return f"{ui.percent(self.calc)} of {str(self.calctype)}"
 
     def __str__(self):
         return f"{self.label} - ${self.value} ({self.calcstr})"

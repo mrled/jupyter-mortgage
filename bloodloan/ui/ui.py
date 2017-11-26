@@ -40,6 +40,19 @@ def dollar(amount):
     return '${:,.2f}'.format(amount)
 
 
+def percent(decimal):
+    """Return a string percentage from a float
+
+    For example, percent(0.0320) => 3.2000%
+
+    The result is rounded to four decimal places (of the *return* value).
+
+    This function *loses precision* (and returns a string),
+    so it should only be relied upon to *display* a percentage value.
+    """
+    return '{:.4f}%'.format(mmath.decimal2percent(decimal))
+
+
 def disablecellscroll():
     """Disable in-cell scrolling"""
 
