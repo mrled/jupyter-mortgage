@@ -165,11 +165,14 @@ def schedule(
         value = value * (1 + monthapprec)
         othercosts = expenses.monthly_expenses(
             monthlycosts, saleprice, value, boyprincipal, monthlyrent)
+        othercosts_total = sum([c.value for c in othercosts])
 
+        # TODO: Calculate things in LoanPayment objects, rather than here?
+        #       Consider modifying LoanPayment to calculate its own totalpmt and equity values
         payment = LoanPayment(
             index=monthidx,
             regularpmt=mpay,
-            totalpmt=interestpmt + balancepmt + overpmt,
+            totalpmt=interestpmt + balancepmt + overpmt + othercosts_total,
             interestpmt=interestpmt,
             balancepmt=balancepmt,
             overpmt=overpmt,
