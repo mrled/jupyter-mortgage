@@ -51,6 +51,27 @@ class MCCalcType(enum.Enum):
         else:
             raise NotImplementedError(f"No description for calculations of type {self}")
 
+    # TODO: Document valid input strings
+    @classmethod
+    def fromstr(cls, string):
+        """Return a new MCCalcType from a string
+        """
+        if string == '' or string == 'amount':
+            return MCCalcType.DOLLAR_AMOUNT
+        elif string == 'sale':
+            return MCCalcType.SALE_FRACTION
+        elif string == 'value':
+            return MCCalcType.VALUE_FRACTION
+        elif string == 'yearly principal':
+            return MCCalcType.YEARLY_PRINCIPAL_FRACTION
+        elif string == 'property tax':
+            return MCCalcType.PROPERTY_TAX_FRACTION
+        elif string == 'rent':
+            return MCCalcType.MONTHLY_RENT_FRACTION
+        elif string == 'capex':
+            return MCCalcType.CAPEX
+        else:
+            raise ValueError(f"No known MCCalcType of {string}")
 
 class MCCapEx():
     """A capital expenditure
@@ -61,6 +82,9 @@ class MCCapEx():
                 (assumes the item is currently brand new)
     """
 
+    # TODO: A way to calculate total cost based on square footage?
+    #       Would be very useful for flooring.
+
     def __init__(self, cost, lifespan):
         self.total = cost
         self.lifespan = lifespan
@@ -68,6 +92,16 @@ class MCCapEx():
 
     def __str__(self):
         return f"{ui.dollar(self.total)} over {self.lifespan} years"
+
+    # TODO: Document the dictionary format
+    @classmethod
+    def fromdict(cls, dictionary):
+        """Return a new MonthlyCost from a dictionary
+        """
+        return cls(
+            dictionary['cost'],
+            dictionary['lifespan'],
+        )
 
 
 class MonthlyCost():
@@ -114,126 +148,32 @@ class MonthlyCost():
     def __repr__(self):
         return str(self)
 
+    # TODO: Document the dictionary format
+    @classmethod
+    def fromdict(cls, dictionary):
+        """Return a new MonthlyCost from a dictionary
+        """
+        label = dictionary['label']
+        value = dictionary['value'] if 'value' in dictionary else None
+        calc = dictionary['percentage'] if 'percentage' in dictionary else None
 
-IRONHARBOR_FHA_MONTHLY_COSTS = [
-    MonthlyCost(
-        label="Mortgage insurance estimate",
-        calc=0.85,
-        calctype=MCCalcType.YEARLY_PRINCIPAL_FRACTION),
+        try:
+            calctype = MCCalcType.fromstr(dictionary['object'])
+        except KeyError:
+            calctype = MCCalcType.DOLLAR_AMOUNT
 
-    # TODO: This is not very precise - I think I'm calculating it wrong
-    #       Looking at different sale prices, it goes between 0.0342% and 0.045%
-    MonthlyCost(
-        label="Hazard insurance (AKA homeowners insurance) estimate",
-        calc=0.04,
-        calctype=MCCalcType.SALE_FRACTION),
-]
+        return MonthlyCost(label=label, value=value, calc=calc, calctype=calctype)
 
-TEXAS_PROPERTY_TAXES_MONTHLY_COSTS = [
-    MonthlyCost(
-        label="Property taxes estimate - 2.0%",
-        # I just google'd for an average and rounded up a bit;
-        # users with more precise knowledge should not use this cost,
-        # and define their own instead
-        calc=0.020,
-        calctype=MCCalcType.VALUE_FRACTION),
-]
-
-CAPEX_MONTHLY_COSTS = [
-    MonthlyCost(
-        # Source: hearsay. Is this too high? I'm seeing wildly varying numbers here
-        label="Roof",
-        calc=MCCapEx(12_000, 25),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        # Source: hearsay
-        label="Water heater",
-        calc=MCCapEx(600, 10),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        # Source: Total guess
-        label="Refrigerator",
-        calc=MCCapEx(1000, 10),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        # Source: Total guess
-        label="Oven / stovetop",
-        calc=MCCapEx(600, 10),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        # Source: hearsay
-        label="Dishwasher",
-        calc=MCCapEx(600, 10),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        # Source: TBORPI
-        label="Driveway",
-        calc=MCCapEx(5000, 50),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        # Source: https://www.angieslist.com/articles/how-much-does-installing-new-ac-cost.htm
-        label="Air conditioner",
-        calc=MCCapEx(5_500, 10),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        # Source: ttps://www.angieslist.com/articles/how-much-does-it-cost-install-new-furnace.htm
-        label="Heater / furnace",
-        calc=MCCapEx(4_500, 10),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        # Source: hearsay
-        # TODO: A way to calculate based on square footage?
-        label="Flooring",
-        calc=MCCapEx(3_000, 5),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        # Source: TBORPI
-        label="Plumbing",
-        calc=MCCapEx(3_000, 30),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        label="Windows",
-        calc=MCCapEx(5_000, 50),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        label="Paint",
-        calc=MCCapEx(2_500, 5),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        label="Cabinets and countertops",
-        calc=MCCapEx(3_000, 20),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        label="Structure (foundation / framing)",
-        calc=MCCapEx(10_000, 50),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        label="Components (garage door, etc)",
-        calc=MCCapEx(1_000, 10),
-        calctype=MCCalcType.CAPEX),
-    MonthlyCost(
-        label="Landscaping",
-        calc=MCCapEx(1_000, 10),
-        calctype=MCCalcType.CAPEX),
-]
-
-MISC_MONTHLY_COSTS = [
-    MonthlyCost(
-        label="Vacancy estimate (5%)",
-        calc=0.05,
-        calctype=MCCalcType.MONTHLY_RENT_FRACTION),
-    MonthlyCost(
-        label="Miscellaneous / unexpected repairs (10%)",
-        calc=0.10,
-        calctype=MCCalcType.MONTHLY_RENT_FRACTION),
-    MonthlyCost(
-        label="Property management estimate (10%)",
-        calc=0.10,
-        calctype=MCCalcType.MONTHLY_RENT_FRACTION),
-    MonthlyCost(
-        label="Lawn care estimate",
-        value=100),
-]
+    # TODO: Document the dictionary format
+    @classmethod
+    def capexfromdict(cls, dictionary):
+        """Return a new MonthlyCost from a dictionary
+        """
+        return MonthlyCost(
+            label=dictionary['label'],
+            calc=MCCapEx.fromdict(dictionary),
+            calctype=MCCalcType.CAPEX,
+        )
 
 
 def monthly_expenses(costs, saleprice, propvalue, boyprincipal, rent):

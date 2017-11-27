@@ -24,8 +24,11 @@ dependencies:
     # Find the setup.py for bloodloan in this directory and install it
     - --editable=.
 
-    - mako
-    - namedtupled
-
     # Useful in VS code, not required otherwise
     - pylint
+
+    # Other required libraries
+    - mako
+    - namedtupled
+    - yamlmagic
+

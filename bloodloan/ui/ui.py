@@ -53,6 +53,24 @@ def percent(decimal):
     return '{:.4f}%'.format(mmath.decimal2percent(decimal))
 
 
+def dicts2monthlycosts(dicts):
+    """From a list of monthly expense dicts, return a list of expenses.MonthlyCost objects
+    """
+    result = []
+    for dictionary in dicts:
+        result.append(expenses.MonthlyCost.fromdict(dictionary))
+    return result
+
+
+def dicts2capexcosts(dicts):
+    """From a list of capex dicts, return a list of expenses.MonthlyCost objects
+    """
+    result = []
+    for dictionary in dicts:
+        result.append(expenses.MonthlyCost.capexfromdict(dictionary))
+    return result
+
+
 def disablecellscroll():
     """Disable in-cell scrolling"""
 
@@ -113,18 +131,19 @@ def wrap_close(saleprice, interestrate, loanterm, propertytaxes):
     return result
 
 
-def wrap_schedule(interestrate, value, principal, saleprice, years, overpayment, appreciation):
+def wrap_schedule(
+        interestrate,
+        value,
+        principal,
+        saleprice,
+        years,
+        overpayment,
+        appreciation,
+        monthlycosts):
     """Show a loan's mortgage schedule in a Jupyter notebook"""
 
     term = years * mmath.MONTHS_IN_YEAR
     overpayments = [overpayment for _ in range(term)]
-
-    monthlycosts = (
-        expenses.IRONHARBOR_FHA_MONTHLY_COSTS +
-        expenses.TEXAS_PROPERTY_TAXES_MONTHLY_COSTS +
-        expenses.MISC_MONTHLY_COSTS +
-        expenses.CAPEX_MONTHLY_COSTS +
-        [])
 
     # Calculate the monthly payments for the mortgage schedule detail,
     # yearly payments for the mortgage schedule summary
@@ -259,7 +278,7 @@ def wrap_streetmap(address, google_api_key=None):
 street_map_executor = util.DelayedExecutor()  # pylint: disable=C0103
 
 
-def propertyinfo():
+def propertyinfo(monthlycosts=None):
     """Gather information about a property using Jupyter UI elements"""
 
     def metawrapper(
@@ -270,7 +289,8 @@ def propertyinfo():
             appreciation,
             propertytaxes,
             address,
-            google_api_key):
+            google_api_key,
+            monthlycosts):
         """Gather information about a property"""
 
         interestrate = mmath.percent2decimal(interestrate)
@@ -286,7 +306,7 @@ def propertyinfo():
         # TODO: currently assuming sale price is value; allow changing to something else
         months = wrap_schedule(
             interestrate, saleprice, closed.principal_total, saleprice, years, overpayment,
-            appreciation)
+            appreciation, monthlycosts)
 
         wrap_monthly_expense_breakdown(months[0])
 
@@ -298,6 +318,8 @@ def propertyinfo():
             wrap_streetmap,
             action_args=(address, google_api_key))
         display(streetmap_container)
+
+    monthlycosts = monthlycosts or []
 
     instructionstempl = Template(filename=os.path.join(TEMPL, 'instructions.mako'))
     display(HTML(instructionstempl.render()))
@@ -354,6 +376,8 @@ def propertyinfo():
         'appreciation': appreciation,
         'propertytaxes': propertytaxes,
         'address': address,
-        'google_api_key': google_api_key})
+        'google_api_key': google_api_key,
+        'monthlycosts': ipywidgets.fixed(monthlycosts),
+    })
 
     display(widgets_box, output)
