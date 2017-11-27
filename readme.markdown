@@ -4,7 +4,8 @@ It's a work-in-progress Jupyter notebook for mortgage calculations.
 
 You can use [Binder](https://mybinder.org/) to run this notebook online. No installation required!
 
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/mrled/jupyter-mortgage/master?filepath=MortgageWorksheet.ipynb)
+- `master` branch: [![master](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/mrled/jupyter-mortgage/master?filepath=MortgageWorksheet.ipynb)
+- `devel` branch: [![master](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/mrled/jupyter-mortgage/devel?filepath=MortgageWorksheet.ipynb)
 
 ## VH1's BEHIND THE REPO
 
