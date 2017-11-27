@@ -32,7 +32,7 @@ Set up the environment the first time:
     # create the conda environment
     conda env create -f environment.yml
 
-Sse the environment to run the notebook:
+Source the environment to run the notebook:
 
     # activate the environment
     # bash:
@@ -53,19 +53,15 @@ Update the environment (e.g. if the prereqs change):
 
 ### Other prerequisites
 
-By default, we use OpenStreetMap.org, which can be used without authentication. If you wish to use Google maps instead, you must procure a ([Google Maps API key](https://console.developers.google.com/flows/enableapi?apiid=maps_backend,geocoding_backend,directions_backend,distance_matrix_backend,elevation_backend&keyType=CLIENT_SIDE&reusekey=true)), and enter it in the appropriate field in the notebook.
+By default, we use OpenStreetMap.org, which can be used without authentication. If you wish to use Google maps instead, you must procure a [Google Maps API key](https://console.developers.google.com/flows/enableapi?apiid=maps_backend,geocoding_backend,directions_backend,distance_matrix_backend,elevation_backend&keyType=CLIENT_SIDE&reusekey=true), and enter it in the appropriate field in the notebook.
 
 ## Defining custom calculations
 
-Items like clothing costs and monthly expenditures are highly variable. Some defaults and reasonable general-purpose estimates are provided in hardcoded constants in modules, but it will be possible to specify more precise figures by adding them directly in the workbook (without needing to modify the Python modules).
+Items like closing costs and monthly expenditures are highly variable. Some defaults and reasonable general-purpose estimates are provided in hardcoded constants in modules, but it will be possible to specify more precise figures by adding them directly in the workbook (without needing to modify the Python modules).
 
-Use `bloodloan.mortgage.closing.ClosingCost` to create a new closing cost.
-See the `IRONHARBOR_FHA_CLOSING_COSTS` const list from the same module for examples.
+Use YAML to create new monthly expenditures (and, soon, closing costs). See the YAML cells in the notebook, which precede the report, for examples.
 
-Use `bloodloan.mortgage.expenses.MonthlyCost` to create a new monthly expense.
-See various const lists named `*_MONTHLY_COSTS` from the same module for examples.
-
-In addition to the examples hardcoded in the module, you may want to consider the following (from TBORPI pp. 100-101):
+You may want to consider the following monthly expenditures (from TBORPI pp. 100-101):
 
 - Taxes
 - Insurance
@@ -109,8 +105,6 @@ I get a lot of information from the fantastic [Book on Rental Property Investing
 OK, I don't actually have a roadmap, but here are a few things I would like to support in the future:
 
 - Denote additional one-time payments
-- Estimate other monthly expenses (mortgage insurance, homeowners insurance, etc)
-- Estimate other expenditures and savings (utilities, saving for capex, etc)
 - Track forced appreciation (aka spending money to improve property value, e.g. by remodeling)
 - Record various property facts: historical rent in area, historical sell price in area, etc
 - Calculate ROI after certain period of time (e.g. closing costs + mortgage payments vs cash when you sell)
@@ -118,6 +112,7 @@ OK, I don't actually have a roadmap, but here are a few things I would like to s
 - Show "percent rules" e.g. 1% rule or 3% rule or whatever - what percentage of total loan (or is it principal?) is monthly rent?
 - Calculate some numbers for recommended reserve cash on hand - maybe start with a six-month recommendation (per TBORPI)
 - UI to show details on "house hack" type properties
+- UI for tracking projected rent
 
 Some really nice stuff might be:
 - Automatically retrieve historical data about rents/sale prices in the area (from where?)
