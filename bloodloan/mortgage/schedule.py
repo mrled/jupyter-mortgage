@@ -158,7 +158,7 @@ def schedule(
             else:
                 raise Exception("This should not happen")
         else:
-            logger.debug(f"#{monthidx}: Paying normal amounts in non-final month")
+            # logger.debug(f"#{monthidx}: Paying normal amounts in non-final month")
             principal = principal - balancepmt - overpmt
 
         monthapprec = appreciation / mmath.MONTHS_IN_YEAR
