@@ -27,6 +27,24 @@ class CCCalcType(enum.Enum):
     INTEREST_MONTHS = enum.auto()
     PROPERTY_TAX_FRACTION = enum.auto()
 
+    # TODO: Document valid input strings
+    @classmethod
+    def fromstr(cls, string):
+        """Return a new instance from a string
+        """
+        if string == '' or string == 'amount':
+            return cls.DOLLAR_AMOUNT
+        elif string == 'sale fraction':
+            return cls.SALE_FRACTION
+        elif string == 'loan fraction':
+            return cls.LOAN_FRACTION
+        elif string == 'months of interest':
+            return cls.INTEREST_MONTHS
+        elif string == 'yearly property tax fraction':
+            return cls.PROPERTY_TAX_FRACTION
+        else:
+            raise ValueError(f"No known CCCalcType type of {string}")
+
 
 class CCPayType(enum.Enum):
     """Determines how the ClosingCost will be paid
@@ -38,6 +56,20 @@ class CCPayType(enum.Enum):
     PRINCIPAL = enum.auto()
     DOWN_PAYMENT = enum.auto()
     FEE = enum.auto()
+
+    # TODO: Document valid input strings
+    @classmethod
+    def fromstr(cls, string):
+        """Return a new instance from a string
+        """
+        if string == '' or string == 'fee':
+            return cls.FEE
+        elif string == 'downpayment':
+            return cls.DOWN_PAYMENT
+        elif string == 'principal':
+            return cls.PRINCIPAL
+        else:
+            raise ValueError(f"No known CCPayType type of {string}")
 
 
 class ClosingCost():
@@ -75,46 +107,26 @@ class ClosingCost():
     def __repr__(self):
         return str(self)
 
+    # TODO: Document the dictionary format
+    @classmethod
+    def fromdict(cls, dictionary):
+        """Return a new MonthlyCost from a dictionary
+        """
+        label = dictionary['label']
+        value = dictionary['value'] if 'value' in dictionary else None
+        calc = dictionary['calculation'] if 'calculation' in dictionary else None
 
-IRONHARBOR_FHA_CLOSING_COSTS = [
-    ClosingCost(
-        "Down payment",
-        calc=3.5,
-        calctype=CCCalcType.SALE_FRACTION,
-        paytype=CCPayType.DOWN_PAYMENT),
-    ClosingCost(
-        "Upfront FHA mortgage insurance",
-        calc=1.75,
-        calctype=CCCalcType.LOAN_FRACTION,
-        paytype=CCPayType.PRINCIPAL),
-    ClosingCost(
-        "Prepaid interest (est 15 days)",
-        calc=0.5,
-        calctype=CCCalcType.INTEREST_MONTHS,
-        paytype=CCPayType.FEE),
-    ClosingCost(
-        "Taxes escrow (3 months)",
-        calc=0.25,
-        calctype=CCCalcType.PROPERTY_TAX_FRACTION,
-        paytype=CCPayType.FEE),
+        try:
+            calctype = CCCalcType.fromstr(dictionary['calculation type'])
+        except KeyError:
+            calctype = CCCalcType.DOLLAR_AMOUNT
 
-    # The broker will give origination options to the buyer, which affect the
-    # interest rate
-    # The buyer might choose to pay a higher fee with a lower interest rate,
-    # or instead a negative fee (aka cash in hand) for a higher interest rate
-    ClosingCost("Origination points", 0),
+        try:
+            paytype = CCPayType.fromstr(dictionary['payment type'])
+        except KeyError:
+            paytype = CCPayType.FEE
 
-    ClosingCost("Flat lender fee", 600),
-    ClosingCost("Appraisal", 495),
-    ClosingCost("Lender attorney", 150),
-    ClosingCost("Tax service", 72),
-    ClosingCost("Credit reports/supplements", 150),
-    ClosingCost("Title lenders and endorsements", 443),
-    ClosingCost("Title closing/courier fee", 450),
-    ClosingCost("County recording", 175),
-    ClosingCost("Estimated prepaid insurance (1 year)", 1440),
-    ClosingCost("Insurance escrow (3 months)", 360),
-]
+        return cls(label=label, value=value, calc=calc, calctype=calctype, paytype=paytype)
 
 
 class CloseResult:
@@ -125,13 +137,18 @@ class CloseResult:
         self.downpayment = downpayment or []
         self.fees = fees or []
         self.principal = principal or []
+        self.principal.append(ClosingCost(
+            "Sale price",
+            value=saleprice,
+            paytype=CCPayType.PRINCIPAL))
 
-    def sum(self, costs):
-        """Sum up costs"""
-        total = 0
-        for cost in costs:
-            total += cost.value
-        return total
+    def __str__(self):
+        return ", ".join([
+            f"<CloseResult: Price ${self.saleprice}",
+            f"Down ${self.downpayment_total} ({len(self.downpayment)})",
+            f"Fees ${self.fees_total} ({len(self.fees)})",
+            f"Principal ${self.principal_total} ({len(self.principal)})>",
+        ])
 
     @property
     def downpayment_total(self):
@@ -148,6 +165,13 @@ class CloseResult:
         """Total principal"""
         return self.sum(self.principal)
 
+    def sum(self, costs):
+        """Sum up costs"""
+        total = 0
+        for cost in costs:
+            total += cost.value
+        return total
+
     def apply(self, cost):
         """Add a ClosingCost"""
         logger.info(f"Closing cost: {cost}")
@@ -157,10 +181,9 @@ class CloseResult:
 
         elif cost.paytype == CCPayType.DOWN_PAYMENT:
             self.downpayment.append(cost)
-            principalvalue = self.saleprice - cost.value
             self.principal.append(ClosingCost(
-                "Principal",
-                value=principalvalue,
+                "Down payment",
+                value=-cost.value,
                 paytype=CCPayType.PRINCIPAL))
 
         elif cost.paytype == CCPayType.FEE:
@@ -228,7 +251,7 @@ def close(saleprice, interestrate, loanterm, propertytaxes, costs):
             #       OK for now but should be fixed at some point
             monthgen = schedule.schedule(
                 interestrate, saleprice, result.principal_total, saleprice, loanterm)
-            firstmonth = monthgen.__next__()
+            firstmonth = next(monthgen)
             cost.value = firstmonth.interestpmt * cost.calc
             result.apply(cost)
 

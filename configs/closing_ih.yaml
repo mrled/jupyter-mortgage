@@ -1,0 +1,58 @@
+label: "IronHarbor closing costs"
+description: "Closing costs (approximate) received from IH in 2017"
+closing:
+  - label: Down payment
+    calculation: 3.5
+    calculation type: sale fraction
+    payment type: downpayment
+  - label: Upfront FHA mortgage insurance
+    calculation: 1.75
+    calculation type: loan fraction
+    payment type: principal
+  - label: Prepaid interest (est 15 days)
+    calculation: 0.5
+    calculation type: months of interest
+    payment type: fee
+  - label: Taxes escrow (3 months)
+    calculation: 0.25
+    calculation type: yearly property tax fraction
+    payment type: fee
+
+  # The broker will give origination options to the buyer, which affect the
+  # interest rate
+  # The buyer might choose to pay a higher fee with a lower interest rate,
+  # or instead a negative fee (aka cash in hand) for a higher interest rate
+  - label: Origination points
+    value: 0
+    payment type: fee
+
+  - label: Flat lender fee
+    value: 600
+    payment type: fee
+  - label: Appraisal
+    value: 495
+    payment type: fee
+  - label: Lender attorney
+    value: 150
+    payment type: fee
+  - label: Tax service
+    value: 72
+    payment type: fee
+  - label: Credit reports/supplements
+    value: 150
+    payment type: fee
+  - label: Title lenders and endorsements
+    value: 443
+    payment type: fee
+  - label: Title closing/courire fee
+    value: 450
+    payment type: fee
+  - label: County recording
+    value: 175
+    payment type: fee
+  - label: Estimated prepaid insurance (1 year)
+    value: 1440
+    payment type: fee
+  - label: Insurance escrow (3 months)
+    value: 360
+    payment type: fee

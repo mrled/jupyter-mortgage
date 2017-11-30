@@ -102,7 +102,16 @@ I get a lot of information from the fantastic [Book on Rental Property Investing
 
 ## Roadmap
 
-OK, I don't actually have a roadmap, but here are a few things I would like to support in the future:
+OK, I don't exactly have a roadmap, but I do have this.
+
+WIP:
+
+- Better way to handle multiple sets of closing costs and monthly expenses
+    - Currently investigating YAML configuration for this
+    - If we go down this route, consider using the voluptuous package to validate them (no external deps except nose!)
+      <https://pypi.python.org/pypi/voluptuous/>
+
+More stuff that I want to work on in the near future:
 
 - Denote additional one-time payments
 - Track forced appreciation (aka spending money to improve property value, e.g. by remodeling)
@@ -114,7 +123,8 @@ OK, I don't actually have a roadmap, but here are a few things I would like to s
 - UI to show details on "house hack" type properties
 - UI for tracking projected rent
 
-Some really nice stuff might be:
+Some really nice stuff for later on might be:
+
 - Automatically retrieve historical data about rents/sale prices in the area (from where?)
 - Figure out a way to show ranges, e.g. if your mortgage broker gives you options varying in down payment size and
 - Maybe something like this could help? https://www.housecanary.com/product-analytics-api#pricing-calculator

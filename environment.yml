@@ -30,5 +30,6 @@ dependencies:
     # Other required libraries
     - mako
     - namedtupled
+    - yaml
     - yamlmagic
 

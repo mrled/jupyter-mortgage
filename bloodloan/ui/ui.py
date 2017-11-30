@@ -11,6 +11,7 @@ from IPython.display import (
 )
 import ipywidgets
 
+import yaml
 from mako.template import Template
 
 from bloodloan import util
@@ -119,12 +120,10 @@ def toggleinputcells():
         '''))
 
 
-def wrap_close(saleprice, interestrate, loanterm, propertytaxes):
+def wrap_close(saleprice, interestrate, loanterm, propertytaxes, closingcosts):
     """Show loan amounts and closing costs"""
-    costs = closing.IRONHARBOR_FHA_CLOSING_COSTS
     monthterm = loanterm * mmath.MONTHS_IN_YEAR
-    result = closing.close(saleprice, interestrate, monthterm, propertytaxes, costs)
-
+    result = closing.close(saleprice, interestrate, monthterm, propertytaxes, closingcosts)
     templ = Template(filename=os.path.join(TEMPL, 'close.mako'))
     display(HTML(templ.render(closeresult=result)))
 
@@ -275,10 +274,109 @@ def wrap_streetmap(address, google_api_key=None):
     return result
 
 
+class CostConfiguration:
+    """A bundle of closing and monthly costs
+    """
+
+    # TODO: 'closing' is also the name of a module, deal with that somehow
+    def __init__(self, label, description="", closing=None, monthly=None):
+        self.label = label
+        self.description = description
+        self.closing = closing or []
+        self.monthly = monthly or []
+
+    @classmethod
+    def fromdict(cls, dictionary):
+        """Return an instance given a dictionary that describes it
+
+        (e.g. from a YAML config file)
+        """
+        result = cls(dictionary['label'])
+        result.description = dictionary['description'] if 'description' in dictionary else ""
+        if 'closing' in dictionary:
+            for cost in dictionary['closing']:
+                result.closing.append(closing.ClosingCost.fromdict(cost))
+        if 'monthly' in dictionary:
+            for cost in dictionary['monthly']:
+                result.monthly.append(expenses.MonthlyCost.fromdict(cost))
+        return result
+
+
+class CostConfigurationCollection:
+    """A collection of CostConfiguration objects
+    """
+
+    def __init__(self, configs=None):
+        self.configs = configs or []
+
+    def __str__(self):
+        return " ".join([
+            "<CostConfigurationCollection:",
+            f"{len(self.closing)} closing costs,",
+            f"{len(self.monthly)} monthly costs",
+            ">"
+        ])
+
+    @property
+    def closing(self):
+        """All closing costs from all configs
+        """
+        result = []
+        for config in self.configs:
+            for cost in config.closing:
+                result.append(cost)
+        return result
+
+    @property
+    def monthly(self):
+        """All monthly costs from all configs
+        """
+        result = []
+        for config in self.configs:
+            for cost in config.monthly:
+                result.append(cost)
+        return result
+
+    def get(self, labels):
+        """Get cost configurations from their labels
+
+        labels      a list of labels to retrieve
+
+        returns     a CostConfigurationCollection
+        """
+        return CostConfigurationCollection(
+            configs=[cc for cc in self.configs if cc.label in labels])
+
+
+def read_configs(directory):
+    """Read all cost configuration YAML files from a directory
+
+    Return a list of config objects
+    """
+    result = CostConfigurationCollection()
+
+    for child in [os.path.join(directory, f) for f in os.listdir(directory)]:
+        if not os.path.isfile(child):
+            continue
+
+        with open(child) as cf:
+            try:
+                contents = yaml.load(cf)
+            except yaml.parser.ParserError as exc:
+                logger.error(f"Error parsing config file {child}: {exc}")
+                continue
+
+        # TODO: Do real validation here - is there such a thing as a YAML schema?
+
+        result.configs.append(CostConfiguration.fromdict(contents))
+
+    return result
+
+
 street_map_executor = util.DelayedExecutor()  # pylint: disable=C0103
 
 
-def propertyinfo(monthlycosts=None):
+def propertyinfo(worksheetdir, monthlycosts=None):
     """Gather information about a property using Jupyter UI elements"""
 
     def metawrapper(
@@ -290,8 +388,11 @@ def propertyinfo(monthlycosts=None):
             propertytaxes,
             address,
             google_api_key,
+            selected_cost_configs,
+            cost_configs,
             monthlycosts):
         """Gather information about a property"""
+        logger.info("Recalculating...")
 
         interestrate = mmath.percent2decimal(interestrate)
         appreciation = mmath.percent2decimal(appreciation)
@@ -301,7 +402,9 @@ def propertyinfo(monthlycosts=None):
         #       also display data to the end user;
         #       instead, we should calculated them all at once and then display the results
 
-        closed = wrap_close(saleprice, interestrate, years, propertytaxes)
+        costs = cost_configs.get(selected_cost_configs)
+        logger.info(costs)
+        closed = wrap_close(saleprice, interestrate, years, propertytaxes, costs.closing)
 
         # TODO: currently assuming sale price is value; allow changing to something else
         months = wrap_schedule(
@@ -320,6 +423,7 @@ def propertyinfo(monthlycosts=None):
         display(streetmap_container)
 
     monthlycosts = monthlycosts or []
+    costconfigs = read_configs(os.path.join(worksheetdir, 'configs'))
 
     instructionstempl = Template(filename=os.path.join(TEMPL, 'instructions.mako'))
     display(HTML(instructionstempl.render()))
@@ -364,6 +468,9 @@ def propertyinfo(monthlycosts=None):
         value="1600 Pennsylvania Ave NW, Washington, DC 20500"))
     google_api_key = util.label_widget("Google API key (optional)", widgets_box, ipywidgets.Text(
         value=""))
+    costs = util.label_widget("Cost configurations", widgets_box, ipywidgets.SelectMultiple(
+        options=[c.label for c in costconfigs.configs],
+    ))
 
     # TODO: pass in property tax estimate to monthly cost
     # TODO: take in monthly costs from the notebook, not hardcoded
@@ -377,6 +484,8 @@ def propertyinfo(monthlycosts=None):
         'propertytaxes': propertytaxes,
         'address': address,
         'google_api_key': google_api_key,
+        'selected_cost_configs': costs,
+        'cost_configs': ipywidgets.fixed(costconfigs),
         'monthlycosts': ipywidgets.fixed(monthlycosts),
     })
 
