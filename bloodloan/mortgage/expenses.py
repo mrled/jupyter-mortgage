@@ -35,19 +35,19 @@ class MCCalcType(enum.Enum):
     def __str__(self):
         #"""Provide a description for the basis of the calculation"""
         if self is MCCalcType.DOLLAR_AMOUNT:
-            return "constant dollar amount"
+            return "constant amount"
         elif self is MCCalcType.SALE_FRACTION:
-            return "sale price"
+            return "sale fraction"
         elif self is MCCalcType.VALUE_FRACTION:
-            return "property value"
+            return "value fraction"
         elif self is MCCalcType.YEARLY_PRINCIPAL_FRACTION:
-            return "BOY remaining principal"
+            return "BOY remaining principal fraction"
         elif self is MCCalcType.PROPERTY_TAX_FRACTION:
-            return "property tax"
+            return "yearly property tax fraction"
         elif self is MCCalcType.MONTHLY_RENT_FRACTION:
-            return "monthly rent"
+            return "rent fraction"
         elif self is MCCalcType.CAPEX:
-            return "capital expenditure"
+            return "capex"
         else:
             raise NotImplementedError(f"No description for calculations of type {self}")
 
@@ -56,17 +56,17 @@ class MCCalcType(enum.Enum):
     def fromstr(cls, string):
         """Return a new MCCalcType from a string
         """
-        if string == '' or string == 'amount':
+        if string == '' or string == "constant amount" or string == 'amount':
             return MCCalcType.DOLLAR_AMOUNT
-        elif string == 'sale':
+        elif string == 'sale fraction':
             return MCCalcType.SALE_FRACTION
-        elif string == 'value':
+        elif string == 'value fraction':
             return MCCalcType.VALUE_FRACTION
-        elif string == 'yearly principal':
+        elif string == 'BOY remaining principal fraction':
             return MCCalcType.YEARLY_PRINCIPAL_FRACTION
-        elif string == 'property tax':
+        elif string == 'yearly property tax fraction':
             return MCCalcType.PROPERTY_TAX_FRACTION
-        elif string == 'rent':
+        elif string == 'rent fraction':
             return MCCalcType.MONTHLY_RENT_FRACTION
         elif string == 'capex':
             return MCCalcType.CAPEX
@@ -155,10 +155,10 @@ class MonthlyCost():
         """
         label = dictionary['label']
         value = dictionary['value'] if 'value' in dictionary else None
-        calc = dictionary['percentage'] if 'percentage' in dictionary else None
+        calc = dictionary['calculation'] if 'calculation' in dictionary else None
 
         try:
-            calctype = MCCalcType.fromstr(dictionary['object'])
+            calctype = MCCalcType.fromstr(dictionary['calculation type'])
         except KeyError:
             calctype = MCCalcType.DOLLAR_AMOUNT
 

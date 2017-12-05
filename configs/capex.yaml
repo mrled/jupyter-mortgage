@@ -1,0 +1,67 @@
+label: "Monthly CapEx"
+description: "Savings required for larger capital expenditures"
+capex:
+  - label: Roof
+    cost: 12_000
+    lifespan: 25
+    source: Hearsay... is this too high? I see widely varying numbers for this
+  - label: Water heater
+    cost: 600
+    lifespan: 10
+    source: Hearsay
+  - label: Refrigerator
+    cost: 1000
+    lifespan: 10
+    source: Guess
+  - label: Oven / stovetop
+    cost: 600
+    lifespan: 10
+    source: Guess
+  - label: Dishwasher
+    cost: 600
+    lifespan: 10
+    source: Hearsay
+  - label: Driveway
+    cost: 5_000
+    lifespan: 50
+    source: TBORPI
+  - label: Air conditioner
+    cost: 5_500
+    lifespan: 10
+    source: https://www.angieslist.com/articles/how-much-does-installing-new-ac-cost.htm
+  - label: Heater / furnace
+    cost: 4_500
+    lifespan: 10
+    source: https://www.angieslist.com/articles/how-much-does-it-cost-install-new-furnace.htm
+  - label: Flooring
+    cost: 3_000
+    lifespan: 5
+    source: hearsay
+  - label: Flooring
+    cost: 3_000
+    lifespan: 30
+    source: TBORPI
+  - label: Windows
+    cost: 5_000
+    lifespan: 50
+    source: TBORPI
+  - label: Paint
+    cost: 2_500
+    lifespan: 5
+    source: TBORPI
+  - label: Cabinets and countertops
+    cost: 3_000
+    lifespan: 10
+    source: TBORPI, guess,
+  - label: Structure (foundation / framing)
+    cost: 10_000
+    lifespan: 50
+    source: TBORPI
+  - label: Components (garage door, etc)
+    cost: 1_000
+    lifespan: 10
+    source: TBORPI
+  - label: Landscaping
+    cost: 1_000
+    lifespan: 10
+    source: TBORPI

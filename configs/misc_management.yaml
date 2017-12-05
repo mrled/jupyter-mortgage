@@ -1,0 +1,18 @@
+label: Management costs
+description: Miscellaneous property management costs
+monthly:
+  - label: Vacancy estimate
+    calculation: 0.05
+    calculation type: rent fraction
+    source: TBORPI
+  - label: Miscellaneous / unexpected repairs
+    calculation: 0.10
+    calculation type: rent fraction
+    source: Guess
+  - label: Property management estimate
+    calculation: 0.10
+    calculation type: rent fraction
+    source: TBORPI
+  - label: Lawn care estimate
+    value: 100
+    source: Guess

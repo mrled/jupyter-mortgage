@@ -1,0 +1,6 @@
+label: Texas property taxes
+description: Texas property taxes, based on a rounded-up average from a Google search
+monthly:
+  - label: Texas property taxes estimate
+    calculation: 0.02
+    calculation type: value fraction

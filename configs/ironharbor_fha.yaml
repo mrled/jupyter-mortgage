@@ -1,5 +1,13 @@
-label: "IronHarbor closing costs"
+label: "IronHarbor FHA costs"
 description: "Closing costs (approximate) received from IH in 2017"
+monthly:
+  - label: Mortgage insurance estimate
+    calculation: 0.85
+    calculation type: BOY remaining principal fraction
+  - label: Hazard insurance (AKA homeowners insurance) estimate
+    # NOTE: This is not very precise, I'm seeing numbers between 0.0342 and 0.045
+    calculation: 0.04
+    calculation type: sale fraction
 closing:
   - label: Down payment
     calculation: 3.5

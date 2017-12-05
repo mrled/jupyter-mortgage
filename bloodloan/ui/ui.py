@@ -299,6 +299,9 @@ class CostConfiguration:
         if 'monthly' in dictionary:
             for cost in dictionary['monthly']:
                 result.monthly.append(expenses.MonthlyCost.fromdict(cost))
+        if 'capex' in dictionary:
+            for cost in dictionary['capex']:
+                result.monthly.append(expenses.MonthlyCost.capexfromdict(cost))
         return result
 
 
@@ -376,7 +379,7 @@ def read_configs(directory):
 street_map_executor = util.DelayedExecutor()  # pylint: disable=C0103
 
 
-def propertyinfo(worksheetdir, monthlycosts=None):
+def propertyinfo(worksheetdir):
     """Gather information about a property using Jupyter UI elements"""
 
     def metawrapper(
@@ -389,8 +392,7 @@ def propertyinfo(worksheetdir, monthlycosts=None):
             address,
             google_api_key,
             selected_cost_configs,
-            cost_configs,
-            monthlycosts):
+            cost_configs):
         """Gather information about a property"""
         logger.info("Recalculating...")
 
@@ -409,7 +411,7 @@ def propertyinfo(worksheetdir, monthlycosts=None):
         # TODO: currently assuming sale price is value; allow changing to something else
         months = wrap_schedule(
             interestrate, saleprice, closed.principal_total, saleprice, years, overpayment,
-            appreciation, monthlycosts)
+            appreciation, costs.monthly)
 
         wrap_monthly_expense_breakdown(months[0])
 
@@ -422,7 +424,6 @@ def propertyinfo(worksheetdir, monthlycosts=None):
             action_args=(address, google_api_key))
         display(streetmap_container)
 
-    monthlycosts = monthlycosts or []
     costconfigs = read_configs(os.path.join(worksheetdir, 'configs'))
 
     instructionstempl = Template(filename=os.path.join(TEMPL, 'instructions.mako'))
@@ -486,7 +487,6 @@ def propertyinfo(worksheetdir, monthlycosts=None):
         'google_api_key': google_api_key,
         'selected_cost_configs': costs,
         'cost_configs': ipywidgets.fixed(costconfigs),
-        'monthlycosts': ipywidgets.fixed(monthlycosts),
     })
 
     display(widgets_box, output)
