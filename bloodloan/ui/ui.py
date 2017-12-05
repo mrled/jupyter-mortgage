@@ -72,6 +72,37 @@ def dicts2capexcosts(dicts):
     return result
 
 
+def getlogconfig(notebookdir, level='DEBUG'):
+    """Get the bloodloan logging configuration
+
+    notebookdir     the location of the Jupyter notebook
+    level           a valid log level
+
+    returns         a dict that can be passed to logging.config.dictConfig
+    """
+    # TODO: RotatingFileHandler
+    return {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {'mort_formatter': {
+            'format':
+                '%(levelname)s %(asctime)s %(filename)s:%(lineno)s:%(funcName)s(): %(message)s',
+            'datefmt': '%Y%m%d-%H%M%S'
+        }},
+        'handlers': {
+            'mort_file_handler': {
+                'class': 'logging.FileHandler',
+                'formatter': 'mort_formatter',
+                'filename': os.path.join(notebookdir, "log.txt")
+            }
+        },
+        'root': {
+            'level': level,
+            'handlers': ['mort_file_handler']
+        }
+    }
+
+
 def disablecellscroll():
     """Disable in-cell scrolling"""
 
@@ -370,6 +401,8 @@ def read_configs(directory):
                 continue
 
         # TODO: Do real validation here - is there such a thing as a YAML schema?
+        #       Alternatively: maybe just try to apply them, then if they don't work display a 
+        #       message saying that cost configurations from xyz file are not available?
 
         result.configs.append(CostConfiguration.fromdict(contents))
 
