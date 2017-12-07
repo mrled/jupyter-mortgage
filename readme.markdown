@@ -123,6 +123,12 @@ More stuff that I want to work on in the near future:
 - UI to show details on "house hack" type properties
 - UI for tracking projected rent
 - Validate YAML cost configs using voluptuous? (no external deps except nose!) <https://pypi.python.org/pypi/voluptuous/>
+- Fix percentage problems:
+    - Correct in schedule preface
+    - Incorrect in monthly balance sheet
+    - Double check all cost configs are defined correctly - I think the monthly propert tax estimate might be wrong
+    - Make sure I'm consistently asking the user to use either decimals (e.g. 0.10) or percentages (e.g. 10%)
+    - Make sure I'm consistently using decimals (e.g. 0.10) internally
 
 Some really nice stuff for later on might be:
 
