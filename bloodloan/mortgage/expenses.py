@@ -6,7 +6,7 @@ import logging
 
 from bloodloan.mortgage import mmath
 # TODO: This violates my abstraction a bit
-from bloodloan.ui import ui
+from bloodloan.ui import uiutil
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -91,7 +91,7 @@ class MCCapEx():
         self.monthly = cost / lifespan / mmath.MONTHS_IN_YEAR
 
     def __str__(self):
-        return f"{ui.dollar(self.total)} over {self.lifespan} years"
+        return f"{uiutil.dollar(self.total)} over {self.lifespan} years"
 
     # TODO: Document the dictionary format
     @classmethod
@@ -140,7 +140,7 @@ class MonthlyCost():
         elif self.calctype is MCCalcType.CAPEX:
             return self.calc
         else:
-            return f"{ui.percent(self.calc)} of {str(self.calctype)}"
+            return f"{uiutil.percent(self.calc)} of {str(self.calctype)}"
 
     def __str__(self):
         return f"{self.label} - ${self.value} ({self.calcstr})"

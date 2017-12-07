@@ -12,7 +12,6 @@ from IPython.display import (
 import ipywidgets
 
 import yaml
-from mako.template import Template
 
 from bloodloan import util
 from bloodloan.mortgage import closing
@@ -20,56 +19,11 @@ from bloodloan.mortgage import expenses
 from bloodloan.mortgage import mmath
 from bloodloan.mortgage import schedule
 from bloodloan.ui import streetmap
+from bloodloan.ui.templ import Templ
+from bloodloan.ui import uiutil
 
 
-SCRIPTDIR = os.path.dirname(os.path.realpath(__file__))
-TEMPL = os.path.join(SCRIPTDIR, 'templ')
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
-
-
-def dollar(amount):
-    """Return a string dollar amount from a float
-
-    For example, dollar(1926.2311831442486) => "$1,926.23"
-
-    We aren't too concerned about the lost accuracy;
-    this function should only be used for *display* values
-
-    NOTE: I'm not sure why, but I often find that if I don't wrap a dollar()
-    call in <span> tags, Jupyter does something really fucked up to my text
-    """
-    return '${:,.2f}'.format(amount)
-
-
-def percent(decimal):
-    """Return a string percentage from a float
-
-    For example, percent(0.0320) => 3.2000%
-
-    The result is rounded to four decimal places (of the *return* value).
-
-    This function *loses precision* (and returns a string),
-    so it should only be relied upon to *display* a percentage value.
-    """
-    return '{:.4f}%'.format(mmath.decimal2percent(decimal))
-
-
-def dicts2monthlycosts(dicts):
-    """From a list of monthly expense dicts, return a list of expenses.MonthlyCost objects
-    """
-    result = []
-    for dictionary in dicts:
-        result.append(expenses.MonthlyCost.fromdict(dictionary))
-    return result
-
-
-def dicts2capexcosts(dicts):
-    """From a list of capex dicts, return a list of expenses.MonthlyCost objects
-    """
-    result = []
-    for dictionary in dicts:
-        result.append(expenses.MonthlyCost.capexfromdict(dictionary))
-    return result
 
 
 def getlogconfig(notebookdir, level='DEBUG'):
@@ -155,8 +109,7 @@ def wrap_close(saleprice, interestrate, loanterm, propertytaxes, closingcosts):
     """Show loan amounts and closing costs"""
     monthterm = loanterm * mmath.MONTHS_IN_YEAR
     result = closing.close(saleprice, interestrate, monthterm, propertytaxes, closingcosts)
-    templ = Template(filename=os.path.join(TEMPL, 'close.mako'))
-    display(HTML(templ.render(closeresult=result)))
+    display(HTML(Templ.Close.render(closeresult=result)))
 
     return result
 
@@ -189,11 +142,8 @@ def wrap_schedule(
         monthlyrent=rent)]
     years = [year for year in schedule.monthly2yearly_schedule(months)]
 
-    prefacetempl = Template(filename=os.path.join(TEMPL, 'schedule_preface.mako'))
-    schedtempl = Template(filename=os.path.join(TEMPL, 'schedule.mako'))
-
     # Display a preface / summary first
-    display(HTML(prefacetempl.render(
+    display(HTML(Templ.SchedulePreface.render(
         interestrate=interestrate,
         principal=principal,
         term=term,
@@ -209,13 +159,13 @@ def wrap_schedule(
     summaryout = ipywidgets.Output()
     detailout = ipywidgets.Output()
     with summaryout:
-        display(HTML(schedtempl.render(
+        display(HTML(Templ.Schedule.render(
             principal=principal,
             value=value,
             loanpayments=years,
             paymentinterval_name="Year")))
     with detailout:
-        display(HTML(schedtempl.render(
+        display(HTML(Templ.Schedule.render(
             principal=principal,
             value=value,
             loanpayments=months,
@@ -237,8 +187,7 @@ def wrap_monthly_expense_breakdown(costs, rent, mortgagepmt):
     rent            projected monthly rent
     mortgagepmt     regular mortgage payment amount
     """
-    exptempl = Template(filename=os.path.join(TEMPL, 'monthlycosts.mako'))
-    display(HTML(exptempl.render(costs=costs, rent=rent, mortgagepmt=mortgagepmt)))
+    display(HTML(Templ.MonthlyCosts.render(costs=costs, rent=rent, mortgagepmt=mortgagepmt)))
 
 
 def get_displayable_geocode(geocode, title):
@@ -468,8 +417,7 @@ def propertyinfo(worksheetdir):
 
     costconfigs = read_configs(os.path.join(worksheetdir, 'configs'))
 
-    instructionstempl = Template(filename=os.path.join(TEMPL, 'instructions.mako'))
-    display(HTML(instructionstempl.render()))
+    display(HTML(Templ.Instructions.render()))
 
     widgets_box = ipywidgets.Box(layout=ipywidgets.Layout(
         display='flex',

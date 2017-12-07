@@ -2,7 +2,7 @@
 
 <%!
 from bloodloan.mortgage.mmath import MONTHS_IN_YEAR
-from bloodloan.ui.ui import dollar, percent
+from bloodloan.ui.uiutil import dollar, percent
 %>
 
 <h2>Mortgage amortization schedule</h2>

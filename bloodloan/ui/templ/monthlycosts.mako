@@ -1,7 +1,7 @@
 <%page args="costs, rent, mortgagepmt" />
 
 <%!
-from bloodloan.ui.ui import dollar
+from bloodloan.ui.uiutil import dollar
 %>
 
 <h3>Monthly balance sheet</h3>
