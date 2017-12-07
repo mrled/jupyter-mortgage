@@ -57,9 +57,16 @@ By default, we use OpenStreetMap.org, which can be used without authentication. 
 
 ## Defining custom calculations
 
-Items like closing costs and monthly expenditures are highly variable. Some defaults and reasonable general-purpose estimates are provided in hardcoded constants in modules, but it will be possible to specify more precise figures by adding them directly in the workbook (without needing to modify the Python modules).
+Items like closing costs and monthly expenditures are highly variable.
+We include some default sets of costs in the configs/ directory;
+feel free to add your own.
 
-Use YAML to create new monthly expenditures (and, soon, closing costs). See the YAML cells in the notebook, which precede the report, for examples.
+Cost configs are written in YAML.
+See existing cost configs for examples.
+
+At some point, we would like to add the ability to define cost configs elsewhere,
+like maybe a [gist](https://gist.github.com) or some other easy way to store text snippets on the web,
+and reference them from within the notebook.
 
 You may want to consider the following monthly expenditures (from TBORPI pp. 100-101):
 
@@ -104,13 +111,6 @@ I get a lot of information from the fantastic [Book on Rental Property Investing
 
 OK, I don't exactly have a roadmap, but I do have this.
 
-WIP:
-
-- Better way to handle multiple sets of closing costs and monthly expenses
-    - Currently investigating YAML configuration for this
-    - If we go down this route, consider using the voluptuous package to validate them (no external deps except nose!)
-      <https://pypi.python.org/pypi/voluptuous/>
-
 More stuff that I want to work on in the near future:
 
 - Denote additional one-time payments
@@ -122,6 +122,7 @@ More stuff that I want to work on in the near future:
 - Calculate some numbers for recommended reserve cash on hand - maybe start with a six-month recommendation (per TBORPI)
 - UI to show details on "house hack" type properties
 - UI for tracking projected rent
+- Validate YAML cost configs using voluptuous? (no external deps except nose!) <https://pypi.python.org/pypi/voluptuous/>
 
 Some really nice stuff for later on might be:
 
