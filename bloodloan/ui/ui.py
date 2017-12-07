@@ -169,7 +169,8 @@ def wrap_schedule(
         years,
         overpayment,
         appreciation,
-        monthlycosts):
+        monthlycosts,
+        rent):
     """Show a loan's mortgage schedule in a Jupyter notebook"""
 
     term = years * mmath.MONTHS_IN_YEAR
@@ -180,10 +181,12 @@ def wrap_schedule(
     # and monthly payments with no overpayments for comparative analysis in prefacetempl
     months = [month for month in schedule.schedule(
         interestrate, value, principal, saleprice, term,
-        overpayments=overpayments, appreciation=appreciation, monthlycosts=monthlycosts)]
+        overpayments=overpayments, appreciation=appreciation, monthlycosts=monthlycosts,
+        monthlyrent=rent)]
     months_no_over = [month for month in schedule.schedule(
         interestrate, value, principal, saleprice, term,
-        overpayments=None, appreciation=appreciation)]
+        overpayments=None, appreciation=appreciation,
+        monthlyrent=rent)]
     years = [year for year in schedule.monthly2yearly_schedule(months)]
 
     prefacetempl = Template(filename=os.path.join(TEMPL, 'schedule_preface.mako'))
@@ -227,10 +230,15 @@ def wrap_schedule(
     return months
 
 
-def wrap_monthly_expense_breakdown(firstmonth):
-    """Show monthly expense breakdown"""
+def wrap_monthly_expense_breakdown(costs, rent, mortgagepmt):
+    """Show monthly expense breakdown
+
+    costs           list of monthly costs
+    rent            projected monthly rent
+    mortgagepmt     regular mortgage payment amount
+    """
     exptempl = Template(filename=os.path.join(TEMPL, 'monthlycosts.mako'))
-    display(HTML(exptempl.render(firstmonth=firstmonth)))
+    display(HTML(exptempl.render(costs=costs, rent=rent, mortgagepmt=mortgagepmt)))
 
 
 def get_displayable_geocode(geocode, title):
@@ -418,6 +426,7 @@ def propertyinfo(worksheetdir):
     def metawrapper(
             interestrate,
             saleprice,
+            rent,
             years,
             overpayment,
             appreciation,
@@ -444,9 +453,9 @@ def propertyinfo(worksheetdir):
         # TODO: currently assuming sale price is value; allow changing to something else
         months = wrap_schedule(
             interestrate, saleprice, closed.principal_total, saleprice, years, overpayment,
-            appreciation, costs.monthly)
+            appreciation, costs.monthly, rent)
 
-        wrap_monthly_expense_breakdown(months[0])
+        wrap_monthly_expense_breakdown(months[0].othercosts, rent, months[0].regularpmt)
 
         global street_map_executor  # pylint: disable=W0603,C0103
         streetmap_container = ipywidgets.Box()
@@ -477,6 +486,11 @@ def propertyinfo(worksheetdir):
         min=1,
         max=1_000_000_000,
         step=1000))
+    rent = util.label_widget("Project rent", widgets_box, ipywidgets.BoundedIntText(
+        value=0,
+        min=0,
+        max=10_000,
+    ))
     years = util.label_widget("Loan term in years", widgets_box, ipywidgets.Dropdown(
         options=[15, 20, 25, 30],
         value=30))
@@ -512,6 +526,7 @@ def propertyinfo(worksheetdir):
     output = ipywidgets.interactive_output(metawrapper, {
         'interestrate': interestrate,
         'saleprice': saleprice,
+        'rent': rent,
         'years': years,
         'overpayment': overpayment,
         'appreciation': appreciation,

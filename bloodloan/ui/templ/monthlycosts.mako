@@ -1,15 +1,14 @@
-<%page args="firstmonth" />
+<%page args="costs, rent, mortgagepmt" />
 
 <%!
 from bloodloan.ui.ui import dollar
 %>
 
-<h3>Monthly cost breakdown</h3>
+<h3>Monthly balance sheet</h3>
 
 <p>
     Note:
-    the "First month value" column (and the combined total at the bottom)
-    is calculated from the very first month of the loan;
+    values displayed here are calculated from the very first month of the loan;
     over time, some values based on e.g. remaining principal
     will decrease.
 </p>
@@ -24,20 +23,41 @@ from bloodloan.ui.ui import dollar
 <tr>
     <th>Description</th>
     <th>Calculation</th>
-    <th>First month value</th>
+    <th>Credit</th>
+    <th>Debit</th>
 </tr>
 
-%for cost in firstmonth.othercosts:
+<tr>
+    <td>Mortgage payment</td>
+    <td>constant amount</td>
+    <td></td>
+    <td>${dollar(mortgagepmt)}</td>
+</tr>
+
+<tr>
+    <td>Projected monthly rent</td>
+    <td>constant amount</td>
+    <td>${dollar(rent)}</td>
+    <td></td>
+</tr>
+
+%for cost in costs:
     <tr>
         <td>${cost.label}</td>
         <td>${cost.calcstr}</td>
+        <td></td>
         <td>${dollar(cost.value)}</td>
     </tr>
 %endfor
+
+<%
+total_costs = sum([c.value for c in costs])
+cashflow = rent - mortgagepmt - total_costs
+%>
+
 <tr>
-    <th>Total costs</th>
-    <th></th>
-    <th>${dollar(sum([c.value for c in firstmonth.othercosts]))}</th>
+    <th colspan="2">Cashflow</th>
+    <th colspan="2">${dollar(cashflow)}</th>
 </tr>
 
 </table>

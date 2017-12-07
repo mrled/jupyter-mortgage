@@ -23,6 +23,7 @@ class LoanPayment:
             principal=0,
             value=0,
             equity=0,
+            rent=0,
             totalinterest=0,
             othercosts=None):
         self.index = index
@@ -34,6 +35,7 @@ class LoanPayment:
         self.principal = principal
         self.value = value
         self.equity = equity
+        self.rent = rent
         self.totalinterest = totalinterest
         self.othercosts = othercosts or []
 
@@ -49,6 +51,7 @@ class LoanPayment:
             f"RemainingPrincipal({self.principal})",
             f"Value({self.value})",
             f"Equity({self.equity})",
+            f"ProjectedRent({self.rent})",
             f"TotalInterest({self.totalinterest})",
             f"OtherCosts({self.totalothercosts})",
             ">"
@@ -179,6 +182,7 @@ def schedule(
             principal=principal,
             value=value,
             equity=value - principal,
+            rent=monthlyrent,
             totalinterest=totalinterest,
             othercosts=othercosts)
 
@@ -209,6 +213,7 @@ def monthly2yearly_schedule(months):
         year.interestpmt += month.interestpmt
         year.balancepmt += month.balancepmt
         year.overpmt += month.overpmt
+        year.rent += month.rent
         year.othercosts += month.othercosts
 
         # Overwrites:
