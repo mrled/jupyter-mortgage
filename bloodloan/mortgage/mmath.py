@@ -13,8 +13,16 @@ def decimal2percent(decimal):
     """Take a decimal, such as 0.035, and convert it to a percentage, such as 3.5
 
     Note that it is not generally reasonable to chain percent2decimal and decimal2percent calls,
-    especially repeatedly.
-    Consider using bloodloan.ui.percent() when trying to display a decimal value as a percentage.
+    especially repeatedly. Because of the way that Python stores numbers, something like
+
+        >>> decimal2percent(percent2decimal(1.9))
+
+    might return a value like
+
+        1.9000000000000000000004
+
+    Consider using bloodloan.ui.uiutil.percent() when trying to display a decimal value as a
+    percentage instead.
     """
     return decimal * 100
 
