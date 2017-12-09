@@ -46,14 +46,13 @@ def monthly_expenses(costs, saleprice, propvalue, boyprincipal, rent):
         if cost.calctype is costconfig.CostCalculationType.DOLLAR_AMOUNT:
             pass
         elif cost.calctype is costconfig.CostCalculationType.YEARLY_PRINCIPAL_FRACTION:
-            fraction = mmath.percent2decimal(cost.calc)
-            cost.value = boyprincipal * fraction / mmath.MONTHS_IN_YEAR
+            cost.value = boyprincipal * cost.calc / mmath.MONTHS_IN_YEAR
         elif cost.calctype is costconfig.CostCalculationType.SALE_FRACTION:
-            cost.value = saleprice * mmath.percent2decimal(cost.calc)
+            cost.value = saleprice * cost.calc
         elif cost.calctype is costconfig.CostCalculationType.VALUE_FRACTION:
-            cost.value = propvalue * mmath.percent2decimal(cost.calc)
+            cost.value = propvalue * cost.calc
         elif cost.calctype is costconfig.CostCalculationType.MONTHLY_RENT_FRACTION:
-            cost.value = rent * mmath.percent2decimal(cost.calc)
+            cost.value = rent * cost.calc
         elif cost.calctype is costconfig.CostCalculationType.CAPEX:
             cost.value = cost.calc.monthly
         else:

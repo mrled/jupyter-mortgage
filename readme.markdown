@@ -126,12 +126,6 @@ Stuff that I want to work on in the near future:
 - LoanPayment objects now track more than mere loan payments. Rename to something that makes sense.
 - It's wayyyyyy past time I should have tests on this shit
 - Allow reloading cost configs without having to restart the Jupyter kernel
-- Fix percentage problems:
-    - Correct in schedule preface
-    - Incorrect in monthly balance sheet
-    - Double check all cost configs are defined correctly - I think the monthly propert tax estimate might be wrong
-    - Make sure I'm consistently asking the user to use either decimals (e.g. 0.10) or percentages (e.g. 10%)
-    - Make sure I'm consistently using decimals (e.g. 0.10) internally
 - I have bloodloan.ui.uiutil and bloodloan.util modules... do something about that
 - Figure out how to get property taxes from just one place... right now the monthly and closing costs are in costconfigs, but it's also defined as a parameter so I can pass it to schedule(), and these values are not synced
 

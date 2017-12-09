@@ -112,10 +112,10 @@ def close(saleprice, interestrate, loanterm, propertytaxes, costs):
         if cost.calctype == costconfig.CostCalculationType.DOLLAR_AMOUNT:
             result.apply(cost)
         if cost.calctype == costconfig.CostCalculationType.SALE_FRACTION:
-            cost.value = saleprice * mmath.percent2decimal(cost.calc)
+            cost.value = saleprice * cost.calc
             result.apply(cost)
         elif cost.calctype == costconfig.CostCalculationType.PROPERTY_TAX_FRACTION:
-            cost.value = propertytaxes * mmath.percent2decimal(cost.calc)
+            cost.value = propertytaxes * cost.calc
             result.apply(cost)
 
     for cost in costs:
@@ -125,7 +125,7 @@ def close(saleprice, interestrate, loanterm, propertytaxes, costs):
         # calctype=LOAN_FRACTION paytype=PRINCIPAL,
         # but that wouldn't make much sense so we don't really handle it here
         if cost.calctype == costconfig.CostCalculationType.LOAN_FRACTION:
-            cost.value = result.principal_total * mmath.percent2decimal(cost.calc)
+            cost.value = result.principal_total * cost.calc
             result.apply(cost)
         elif cost.calctype == costconfig.CostCalculationType.INTEREST_MONTHS:
             # TODO: Improve INTEREST_MONTHS closing cost calculation

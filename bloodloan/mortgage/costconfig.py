@@ -7,6 +7,7 @@ import enum
 import logging
 import numbers
 import os
+import re
 
 import yaml
 
@@ -163,6 +164,15 @@ class Cost():
             dictionary.get('paytype') or
             dictionary.get('payment type') or
             CostPaymentType.FEE)
+
+        # Calc needs to be either a number or a CapitalExpenditure
+        # String values could be percentages (ending in %) or decimals (not)
+        if isinstance(self.calc, str):
+            pct_match = re.match(r"^([0-9_,\.]*)\%$", self.calc)
+            if pct_match:
+                self.calc = mmath.percent2decimal(float(pct_match.group(1)))
+            else:
+                self.calc = float(self.calc)
 
         if not self.label:
             raise ValueError(f"Invalid empty label")
