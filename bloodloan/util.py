@@ -141,32 +141,3 @@ def html_hbox(text, style):
     hbox.children = [ipywidgets.HTML(text)]
     hbox.box_style = style
     return hbox
-
-
-def label_widget(label, container, widget):
-    """Create a non-fixed-width label for a widget
-
-    Unlike the description= argument that can be passed to widgets, the label should expand in size
-    to meet the width of the container
-
-    label       text for a new ipywidgets.Label for the widget
-    container   a pre-created ipywidgets.Box to which the label and widget will be added
-                (NOTE: this function does not display this container)
-                for example:
-    widget      a pre-created widget
-
-    Example:
-        widgets_box = ipywidgets.Box(layout=ipywidgets.Layout(
-            display='flex', flex_flow='column', align_items='stretch', width='70%'))
-        propertytaxes = label_widget(
-            "Yearly property taxes", widgets_box, ipywidgets.BoundedIntText(
-                value=5500, min=0, max=1_000_000, step=5))
-    """
-    box = ipywidgets.Box()
-    box.children = [ipywidgets.Label(label), widget]
-    container.children += (box,)
-    box.layout = ipywidgets.Layout(
-        display='flex',
-        flex_flow='row',
-        justify_content='space-between')
-    return widget

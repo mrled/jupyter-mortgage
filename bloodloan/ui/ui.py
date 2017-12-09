@@ -17,10 +17,12 @@ from bloodloan.mortgage import costconfig
 from bloodloan.mortgage import mmath
 from bloodloan.mortgage import schedule
 from bloodloan.ui import streetmap
+from bloodloan.ui.parameters import Params
 from bloodloan.ui.templ import Templ
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
+street_map_executor = util.DelayedExecutor()  # pylint: disable=C0103
 
 
 def getlogconfig(
@@ -272,123 +274,74 @@ def wrap_streetmap(address, google_api_key=None):
     return result
 
 
-street_map_executor = util.DelayedExecutor()  # pylint: disable=C0103
+def propertyinfo(
+        interestrate,
+        saleprice,
+        rent,
+        years,
+        overpayment,
+        appreciation,
+        propertytaxes,
+        address,
+        google_api_key,
+        selected_cost_configs,
+        cost_configs):
+    """Gather information about a property"""
+    logger.info("Recalculating...")
+
+    interestrate = mmath.percent2decimal(interestrate)
+    appreciation = mmath.percent2decimal(appreciation)
+
+    # TODO: split out display and calculation
+    #       We're getting values like the 'closed' and 'months' variables from functions that
+    #       also display data to the end user;
+    #       instead, we should calculated them all at once and then display the results
+
+    costs = cost_configs.get(selected_cost_configs)
+    logger.info(costs)
+    closed = wrap_close(saleprice, interestrate, years, propertytaxes, costs.closing)
+
+    # TODO: currently assuming sale price is value; allow changing to something else
+    months = wrap_schedule(
+        interestrate, saleprice, closed.principal_total, saleprice, years, overpayment,
+        appreciation, costs.monthly, rent)
+
+    wrap_monthly_expense_breakdown(months[0].othercosts, rent, months[0].regularpmt)
+
+    global street_map_executor  # pylint: disable=W0603,C0103
+    streetmap_container = ipywidgets.Box()
+    street_map_executor.run(
+        streetmap_container,
+        "Loading maps...",
+        wrap_streetmap,
+        action_args=(address, google_api_key))
+    display(streetmap_container)
 
 
-def propertyinfo(worksheetdir):
+def main(worksheetdir):
     """Gather information about a property using Jupyter UI elements"""
-
-    def metawrapper(
-            interestrate,
-            saleprice,
-            rent,
-            years,
-            overpayment,
-            appreciation,
-            propertytaxes,
-            address,
-            google_api_key,
-            selected_cost_configs,
-            cost_configs):
-        """Gather information about a property"""
-        logger.info("Recalculating...")
-
-        interestrate = mmath.percent2decimal(interestrate)
-        appreciation = mmath.percent2decimal(appreciation)
-
-        # TODO: split out display and calculation
-        #       We're getting values like the 'closed' and 'months' variables from functions that
-        #       also display data to the end user;
-        #       instead, we should calculated them all at once and then display the results
-
-        costs = cost_configs.get(selected_cost_configs)
-        logger.info(costs)
-        closed = wrap_close(saleprice, interestrate, years, propertytaxes, costs.closing)
-
-        # TODO: currently assuming sale price is value; allow changing to something else
-        months = wrap_schedule(
-            interestrate, saleprice, closed.principal_total, saleprice, years, overpayment,
-            appreciation, costs.monthly, rent)
-
-        wrap_monthly_expense_breakdown(months[0].othercosts, rent, months[0].regularpmt)
-
-        global street_map_executor  # pylint: disable=W0603,C0103
-        streetmap_container = ipywidgets.Box()
-        street_map_executor.run(
-            streetmap_container,
-            "Loading maps...",
-            wrap_streetmap,
-            action_args=(address, google_api_key))
-        display(streetmap_container)
 
     costconfigs = costconfig.CostConfigurationCollection(
         directory=os.path.join(worksheetdir, 'configs'))
 
     display(HTML(Templ.Instructions.render()))
 
-    widgets_box = ipywidgets.Box(layout=ipywidgets.Layout(
-        display='flex',
-        flex_flow='column',
-        align_items='stretch',
-        width='70%'))
-
-    interestrate = util.label_widget("Interest rate", widgets_box, ipywidgets.BoundedFloatText(
-        value=3.75,
-        min=0.01,
-        step=0.25))
-    saleprice = util.label_widget("Sale price", widgets_box, ipywidgets.BoundedFloatText(
-        value=250_000,
-        min=1,
-        max=1_000_000_000,
-        step=1000))
-    rent = util.label_widget("Project rent", widgets_box, ipywidgets.BoundedIntText(
-        value=0,
-        min=0,
-        max=10_000,
-    ))
-    years = util.label_widget("Loan term in years", widgets_box, ipywidgets.Dropdown(
-        options=[15, 20, 25, 30],
-        value=30))
-    overpayment = util.label_widget(
-        "Monthly overpayment amount", widgets_box, ipywidgets.BoundedIntText(
-            value=50,
-            min=0,
-            max=1_000_000,
-            step=5))
-    appreciation = util.label_widget(
-        "Yearly appreciation", widgets_box, ipywidgets.BoundedFloatText(
-            value=0.5,
-            min=-20.0,
-            max=20.0,
-            step=0.5))
-    propertytaxes = util.label_widget(
-        "Yearly property taxes", widgets_box, ipywidgets.BoundedIntText(
-            value=5500,
-            min=0,
-            max=1_000_000,
-            step=5))
-    address = util.label_widget("Property address", widgets_box, ipywidgets.Textarea(
-        value="1600 Pennsylvania Ave NW, Washington, DC 20500"))
-    google_api_key = util.label_widget("Google API key (optional)", widgets_box, ipywidgets.Text(
-        value=""))
-    costs = util.label_widget("Cost configurations", widgets_box, ipywidgets.SelectMultiple(
-        options=[c.label for c in costconfigs.configs],
-    ))
+    params = Params([config.label for config in costconfigs.configs])
 
     # TODO: pass in property tax estimate to monthly cost
 
-    output = ipywidgets.interactive_output(metawrapper, {
-        'interestrate': interestrate,
-        'saleprice': saleprice,
-        'rent': rent,
-        'years': years,
-        'overpayment': overpayment,
-        'appreciation': appreciation,
-        'propertytaxes': propertytaxes,
-        'address': address,
-        'google_api_key': google_api_key,
-        'selected_cost_configs': costs,
+    output = ipywidgets.interactive_output(propertyinfo, {
+        'interestrate': params.interestrate,
+        'saleprice': params.saleprice,
+        'rent': params.rent,
+        'years': params.years,
+        'overpayment': params.overpayment,
+        'appreciation': params.appreciation,
+        'propertytaxes': params.propertytaxes,
+        'address': params.address,
+        'google_api_key': params.google_api_key,
+        'selected_cost_configs': params.costs,
         'cost_configs': ipywidgets.fixed(costconfigs),
     })
 
-    display(widgets_box, output)
+    display(params.widgets_box, output)
