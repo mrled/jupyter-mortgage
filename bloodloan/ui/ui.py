@@ -23,28 +23,41 @@ from bloodloan.ui.templ import Templ
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
-def getlogconfig(notebookdir, level='DEBUG'):
+def getlogconfig(
+        notebookdir,
+        logfile='log.txt',
+        fmt='%(levelname)s %(asctime)s %(filename)s:%(lineno)s:%(funcName)s(): %(message)s',
+        datefmt='%Y%m%d-%H%M%S',
+        maxbytes=10 * 1024 * 1024,  # 10MB
+        backupcount=1,
+        level='DEBUG'):
     """Get the bloodloan logging configuration
 
     notebookdir     the location of the Jupyter notebook
+    logfile         the filename to use, inside of notebookdir, for the log
+    fmt             a valid log format
+    datefmt         a valid date format
+    maxbytes        maximum size of each log file
+    backupcount     number of backups to make; cannot be zero or log will grow forever
     level           a valid log level
 
     returns         a dict that can be passed to logging.config.dictConfig
     """
-    # TODO: RotatingFileHandler
+
     return {
         'version': 1,
         'disable_existing_loggers': False,
         'formatters': {'mort_formatter': {
-            'format':
-                '%(levelname)s %(asctime)s %(filename)s:%(lineno)s:%(funcName)s(): %(message)s',
-            'datefmt': '%Y%m%d-%H%M%S'
+            'format': fmt,
+            'datefmt': datefmt,
         }},
         'handlers': {
             'mort_file_handler': {
-                'class': 'logging.FileHandler',
+                'class': 'logging.handlers.RotatingFileHandler',
                 'formatter': 'mort_formatter',
-                'filename': os.path.join(notebookdir, "log.txt")
+                'filename': os.path.join(notebookdir, logfile),
+                'maxBytes': maxbytes,
+                'backupCount': backupcount,
             }
         },
         'root': {
