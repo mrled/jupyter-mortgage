@@ -321,14 +321,15 @@ def propertyinfo(
 
     wrap_monthly_expense_breakdown(months[0].othercosts, rent, months[0].regularpmt)
 
-    global street_map_executor  # pylint: disable=W0603,C0103
-    streetmap_container = ipywidgets.Box()
-    street_map_executor.run(
-        streetmap_container,
-        "Loading maps...",
-        wrap_streetmap,
-        action_args=(address, google_api_key))
-    display(streetmap_container)
+    if address != "":
+        global street_map_executor  # pylint: disable=W0603,C0103
+        streetmap_container = ipywidgets.Box()
+        street_map_executor.run(
+            streetmap_container,
+            "Loading maps...",
+            wrap_streetmap,
+            action_args=(address, google_api_key))
+        display(streetmap_container)
 
 
 def main(worksheetdir):
