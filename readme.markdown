@@ -111,7 +111,7 @@ I get a lot of information from the fantastic [Book on Rental Property Investing
 
 OK, I don't exactly have a roadmap, but I do have this.
 
-More stuff that I want to work on in the near future:
+Stuff that I want to work on in the near future:
 
 - Denote additional one-time payments
 - Track forced appreciation (aka spending money to improve property value, e.g. by remodeling)
@@ -123,6 +123,12 @@ More stuff that I want to work on in the near future:
 - UI to show details on "house hack" type properties
 - UI for tracking projected rent
 - Validate YAML cost configs using voluptuous? (no external deps except nose!) <https://pypi.python.org/pypi/voluptuous/>
+- LoanPayment objects now track more than mere loan payments. Rename to something that makes sense.
+- It's wayyyyyy past time I should have tests on this shit
+- Allow reloading cost configs without having to restart the Jupyter kernel
+- Save widget state when doing "Restart & Run All"
+    - Automatically save user-selected value to a file that is .gitignore'd
+    - If that file exists when my notebook is run, read it and use values from it
 - Fix percentage problems:
     - Correct in schedule preface
     - Incorrect in monthly balance sheet
