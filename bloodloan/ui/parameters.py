@@ -77,6 +77,9 @@ class Params:
                     for example:
         widget      a pre-created widget
 
+        return      the widget that was passed in
+                    this lets you define a widget and put it in a label box in one line of code
+
         Example:
             widgets_box = ipywidgets.Box(layout=ipywidgets.Layout(
                 display='flex', flex_flow='column', align_items='stretch', width='70%'))
