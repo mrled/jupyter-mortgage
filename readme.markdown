@@ -135,6 +135,7 @@ Stuff that I want to work on in the near future:
     - Double check all cost configs are defined correctly - I think the monthly propert tax estimate might be wrong
     - Make sure I'm consistently asking the user to use either decimals (e.g. 0.10) or percentages (e.g. 10%)
     - Make sure I'm consistently using decimals (e.g. 0.10) internally
+- I have bloodloan.ui.uiutil and bloodloan.util modules... do something about that
 
 Some really nice stuff for later on might be:
 
