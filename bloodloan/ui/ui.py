@@ -17,7 +17,7 @@ from bloodloan.mortgage import costconfig
 from bloodloan.mortgage import mmath
 from bloodloan.mortgage import schedule
 from bloodloan.ui import streetmap
-from bloodloan.ui.parameters import Params
+from bloodloan.ui.parameters import Params, ParameterIds
 from bloodloan.ui.templ import Templ
 
 
@@ -285,8 +285,21 @@ def propertyinfo(
         address,
         google_api_key,
         selected_cost_configs,
-        cost_configs):
+        cost_configs,
+        parameters):
     """Gather information about a property"""
+
+    parameters.persist(ParameterIds.INTEREST_RATE, interestrate)
+    parameters.persist(ParameterIds.SALE_PRICE, saleprice)
+    parameters.persist(ParameterIds.RENT, rent)
+    parameters.persist(ParameterIds.TERM, years)
+    parameters.persist(ParameterIds.OVERPAYMENT, overpayment)
+    parameters.persist(ParameterIds.APPRECIATION, appreciation)
+    parameters.persist(ParameterIds.PROPERTY_TAXES, propertytaxes)
+    parameters.persist(ParameterIds.ADDRESS, address)
+    parameters.persist(ParameterIds.GOOGLE_API_KEY, google_api_key)
+    parameters.persist(ParameterIds.COSTS, selected_cost_configs)
+
     logger.info("Recalculating...")
 
     interestrate = mmath.percent2decimal(interestrate)
@@ -326,22 +339,29 @@ def main(worksheetdir):
 
     display(HTML(Templ.Instructions.render()))
 
-    params = Params([config.label for config in costconfigs.configs])
+    params = Params(
+        persist_path=os.path.join(worksheetdir, '.param_persist'),
+        cost_config_names=[config.label for config in costconfigs.configs])
 
     # TODO: pass in property tax estimate to monthly cost
 
+    # WARNING: DISABLING ERRORS FOR 'Instance of <class> has no <member> member'
+    # FOR REMAINDER OF FILE!
+    # (We use setattr() to set the members of the params object, so pylint can't see them)
+    # pylint: disable=E1101
     output = ipywidgets.interactive_output(propertyinfo, {
-        'interestrate': params.interestrate,
-        'saleprice': params.saleprice,
+        'interestrate': params.interest_rate,
+        'saleprice': params.sale_price,
         'rent': params.rent,
-        'years': params.years,
+        'years': params.term,
         'overpayment': params.overpayment,
         'appreciation': params.appreciation,
-        'propertytaxes': params.propertytaxes,
+        'propertytaxes': params.property_taxes,
         'address': params.address,
         'google_api_key': params.google_api_key,
         'selected_cost_configs': params.costs,
         'cost_configs': ipywidgets.fixed(costconfigs),
+        'parameters': ipywidgets.fixed(params),
     })
 
-    display(params.widgets_box, output)
+    display(params.params_box, output)

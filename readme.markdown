@@ -126,9 +126,6 @@ Stuff that I want to work on in the near future:
 - LoanPayment objects now track more than mere loan payments. Rename to something that makes sense.
 - It's wayyyyyy past time I should have tests on this shit
 - Allow reloading cost configs without having to restart the Jupyter kernel
-- Save widget state when doing "Restart & Run All"
-    - Automatically save user-selected value to a file that is .gitignore'd
-    - If that file exists when my notebook is run, read it and use values from it
 - Fix percentage problems:
     - Correct in schedule preface
     - Incorrect in monthly balance sheet

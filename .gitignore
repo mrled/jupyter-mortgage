@@ -3,4 +3,5 @@ __pycache__
 venv
 .vscode
 log.txt*
-bloodloan.egg-info
+*.egg-info
+.param_persist
