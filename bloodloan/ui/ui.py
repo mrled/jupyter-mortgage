@@ -376,7 +376,6 @@ def propertyinfo(worksheetdir):
     ))
 
     # TODO: pass in property tax estimate to monthly cost
-    # TODO: take in monthly costs from the notebook, not hardcoded
 
     output = ipywidgets.interactive_output(metawrapper, {
         'interestrate': interestrate,

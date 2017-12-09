@@ -148,3 +148,4 @@ Some really nice stuff for later on might be:
 - This is for regular people, but has the same problem: https://tax-office.traviscountytx.gov/property-tax-estimator
 - These pages might have info? http://www.txcip.org/tac/census/CountyProfiles.php
   for instance if I can figure out how to get this page for other counties: http://www.txcip.org/tac/census/districthist.php?FIPS=48439
+- A way to calculate a CapitalExpenditure's cost based on square footage? Would be useful for flooring and maybe roofs

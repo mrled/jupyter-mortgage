@@ -16,25 +16,21 @@ class LoanPayment:
             self,
             index=0,
             regularpmt=0,
-            totalpmt=0,
             interestpmt=0,
             balancepmt=0,
             overpmt=0,
             principal=0,
             value=0,
-            equity=0,
             rent=0,
             totalinterest=0,
             othercosts=None):
         self.index = index
         self.regularpmt = regularpmt
-        self.totalpmt = totalpmt
         self.interestpmt = interestpmt
         self.balancepmt = balancepmt
         self.overpmt = overpmt
         self.principal = principal
         self.value = value
-        self.equity = equity
         self.rent = rent
         self.totalinterest = totalinterest
         self.othercosts = othercosts or []
@@ -64,6 +60,16 @@ class LoanPayment:
     def totalothercosts(self):
         """Total dollar amount for all othercosts"""
         return sum([cost.value for cost in self.othercosts])
+
+    @property
+    def totalpmt(self):
+        """Total payment amount"""
+        return self.interestpmt + self.balancepmt + self.overpmt + self.totalothercosts
+
+    @property
+    def equity(self):
+        """Equity as of this payment"""
+        return self.value - self.principal
 
 
 def schedule(
@@ -168,20 +174,15 @@ def schedule(
         value = value * (1 + monthapprec)
         othercosts = expenses.monthly_expenses(
             monthlycosts, saleprice, value, boyprincipal, monthlyrent)
-        othercosts_total = sum([c.value for c in othercosts])
 
-        # TODO: Calculate things in LoanPayment objects, rather than here?
-        #       Consider modifying LoanPayment to calculate its own totalpmt and equity values
         payment = LoanPayment(
             index=monthidx,
             regularpmt=mpay,
-            totalpmt=interestpmt + balancepmt + overpmt + othercosts_total,
             interestpmt=interestpmt,
             balancepmt=balancepmt,
             overpmt=overpmt,
             principal=principal,
             value=value,
-            equity=value - principal,
             rent=monthlyrent,
             totalinterest=totalinterest,
             othercosts=othercosts)

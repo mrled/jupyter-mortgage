@@ -75,9 +75,6 @@ class CapitalExpenditure():
                 (assumes the item is currently brand new)
     """
 
-    # TODO: A way to calculate total cost based on square footage?
-    #       Would be very useful for flooring.
-
     def __init__(self, dictionary=None, cost=None, lifespan=None):
         """Initialize the object
 
@@ -224,7 +221,6 @@ class CostConfiguration:
         self.closing = closing or []
         self.monthly = monthly or []
 
-    # TODO: get rid of fromdict() method, make it work like the objects above
     @classmethod
     def fromdict(cls, dictionary):
         """Return an instance given a dictionary that describes it
