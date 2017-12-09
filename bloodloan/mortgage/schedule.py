@@ -210,7 +210,6 @@ def monthly2yearly_schedule(months):
 
         # Adds:
         year.regularpmt += month.regularpmt
-        year.totalpmt += month.totalpmt
         year.interestpmt += month.interestpmt
         year.balancepmt += month.balancepmt
         year.overpmt += month.overpmt
@@ -220,7 +219,6 @@ def monthly2yearly_schedule(months):
         # Overwrites:
         year.principal = month.principal
         year.value = month.value
-        year.equity = month.equity
         year.totalinterest = month.totalinterest
         idx += 1
 
