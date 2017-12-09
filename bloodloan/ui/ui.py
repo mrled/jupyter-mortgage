@@ -22,7 +22,6 @@ from bloodloan.ui.templ import Templ
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
-street_map_executor = util.DelayedExecutor()  # pylint: disable=C0103
 
 
 def getlogconfig(
@@ -275,6 +274,8 @@ def wrap_streetmap(address, google_api_key=None):
 
 
 def propertyinfo(
+
+        # Notebook parameters:
         interestrate,
         saleprice,
         rent,
@@ -285,8 +286,12 @@ def propertyinfo(
         address,
         google_api_key,
         selected_cost_configs,
+
+        # Other data passing:
         cost_configs,
-        parameters):
+        parameters,
+        street_map_executor,
+        ):
     """Gather information about a property"""
 
     parameters.persist(ParameterIds.INTEREST_RATE, interestrate)
@@ -322,7 +327,6 @@ def propertyinfo(
     wrap_monthly_expense_breakdown(months[0].othercosts, rent, months[0].regularpmt)
 
     if address != "":
-        global street_map_executor  # pylint: disable=W0603,C0103
         streetmap_container = ipywidgets.Box()
         street_map_executor.run(
             streetmap_container,
@@ -335,22 +339,23 @@ def propertyinfo(
 def main(worksheetdir):
     """Gather information about a property using Jupyter UI elements"""
 
-    costconfigs = costconfig.CostConfigurationCollection(
-        directory=os.path.join(worksheetdir, 'configs'))
-
     display(HTML(Templ.Instructions.render()))
 
+    costconfigs = costconfig.CostConfigurationCollection(
+        directory=os.path.join(worksheetdir, 'configs'))
     params = Params(
         persist_path=os.path.join(worksheetdir, '.param_persist'),
         cost_config_names=[config.label for config in costconfigs.configs])
-
-    # TODO: pass in property tax estimate to monthly cost
+    street_map_executor = util.DelayedExecutor()
 
     # WARNING: DISABLING ERRORS FOR 'Instance of <class> has no <member> member'
     # FOR REMAINDER OF FILE!
     # (We use setattr() to set the members of the params object, so pylint can't see them)
     # pylint: disable=E1101
+
     output = ipywidgets.interactive_output(propertyinfo, {
+
+        # Notebook parameters (passed directly)
         'interestrate': params.interest_rate,
         'saleprice': params.sale_price,
         'rent': params.rent,
@@ -361,8 +366,11 @@ def main(worksheetdir):
         'address': params.address,
         'google_api_key': params.google_api_key,
         'selected_cost_configs': params.costs,
+
+        # Other data passing (must be fixed)
         'cost_configs': ipywidgets.fixed(costconfigs),
         'parameters': ipywidgets.fixed(params),
+        'street_map_executor': ipywidgets.fixed(street_map_executor),
     })
 
     display(params.params_box, output)

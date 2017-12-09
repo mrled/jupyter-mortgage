@@ -133,6 +133,7 @@ Stuff that I want to work on in the near future:
     - Make sure I'm consistently asking the user to use either decimals (e.g. 0.10) or percentages (e.g. 10%)
     - Make sure I'm consistently using decimals (e.g. 0.10) internally
 - I have bloodloan.ui.uiutil and bloodloan.util modules... do something about that
+- Figure out how to get property taxes from just one place... right now the monthly and closing costs are in costconfigs, but it's also defined as a parameter so I can pass it to schedule(), and these values are not synced
 
 Some really nice stuff for later on might be:
 
