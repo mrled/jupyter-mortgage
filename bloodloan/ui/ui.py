@@ -11,16 +11,13 @@ from IPython.display import (
 )
 import ipywidgets
 
-import yaml
-
 from bloodloan import util
 from bloodloan.mortgage import closing
-from bloodloan.mortgage import expenses
+from bloodloan.mortgage import costconfig
 from bloodloan.mortgage import mmath
 from bloodloan.mortgage import schedule
 from bloodloan.ui import streetmap
 from bloodloan.ui.templ import Templ
-from bloodloan.ui import uiutil
 
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -262,110 +259,6 @@ def wrap_streetmap(address, google_api_key=None):
     return result
 
 
-class CostConfiguration:
-    """A bundle of closing and monthly costs
-    """
-
-    # TODO: 'closing' is also the name of a module, deal with that somehow
-    def __init__(self, label, description="", closing=None, monthly=None):
-        self.label = label
-        self.description = description
-        self.closing = closing or []
-        self.monthly = monthly or []
-
-    @classmethod
-    def fromdict(cls, dictionary):
-        """Return an instance given a dictionary that describes it
-
-        (e.g. from a YAML config file)
-        """
-        result = cls(dictionary['label'])
-        result.description = dictionary['description'] if 'description' in dictionary else ""
-        if 'closing' in dictionary:
-            for cost in dictionary['closing']:
-                result.closing.append(closing.ClosingCost.fromdict(cost))
-        if 'monthly' in dictionary:
-            for cost in dictionary['monthly']:
-                result.monthly.append(expenses.MonthlyCost.fromdict(cost))
-        if 'capex' in dictionary:
-            for cost in dictionary['capex']:
-                result.monthly.append(expenses.MonthlyCost.capexfromdict(cost))
-        return result
-
-
-class CostConfigurationCollection:
-    """A collection of CostConfiguration objects
-    """
-
-    def __init__(self, configs=None):
-        self.configs = configs or []
-
-    def __str__(self):
-        return " ".join([
-            "<CostConfigurationCollection:",
-            f"{len(self.closing)} closing costs,",
-            f"{len(self.monthly)} monthly costs",
-            ">"
-        ])
-
-    @property
-    def closing(self):
-        """All closing costs from all configs
-        """
-        result = []
-        for config in self.configs:
-            for cost in config.closing:
-                result.append(cost)
-        return result
-
-    @property
-    def monthly(self):
-        """All monthly costs from all configs
-        """
-        result = []
-        for config in self.configs:
-            for cost in config.monthly:
-                result.append(cost)
-        return result
-
-    def get(self, labels):
-        """Get cost configurations from their labels
-
-        labels      a list of labels to retrieve
-
-        returns     a CostConfigurationCollection
-        """
-        return CostConfigurationCollection(
-            configs=[cc for cc in self.configs if cc.label in labels])
-
-
-def read_configs(directory):
-    """Read all cost configuration YAML files from a directory
-
-    Return a list of config objects
-    """
-    result = CostConfigurationCollection()
-
-    for child in [os.path.join(directory, f) for f in os.listdir(directory)]:
-        if not os.path.isfile(child):
-            continue
-
-        with open(child) as cf:
-            try:
-                contents = yaml.load(cf)
-            except yaml.parser.ParserError as exc:
-                logger.error(f"Error parsing config file {child}: {exc}")
-                continue
-
-        # TODO: Do real validation here - is there such a thing as a YAML schema?
-        #       Alternatively: maybe just try to apply them, then if they don't work display a 
-        #       message saying that cost configurations from xyz file are not available?
-
-        result.configs.append(CostConfiguration.fromdict(contents))
-
-    return result
-
-
 street_map_executor = util.DelayedExecutor()  # pylint: disable=C0103
 
 
@@ -415,7 +308,8 @@ def propertyinfo(worksheetdir):
             action_args=(address, google_api_key))
         display(streetmap_container)
 
-    costconfigs = read_configs(os.path.join(worksheetdir, 'configs'))
+    costconfigs = costconfig.CostConfigurationCollection(
+        directory=os.path.join(worksheetdir, 'configs'))
 
     display(HTML(Templ.Instructions.render()))
 
