@@ -10,28 +10,48 @@ from bloodloan.ui.uiutil import dollar
 
 <h3>Principal</h3>
 <table>
+    <tr>
+        <th>Description</th>
+        <th>Amount</th>
+    </tr>
     %for cost in closeresult.principal:
-        <tr><th>${cost.label}</th><td><span>${dollar(cost.value)}</span></td></tr>
+        <tr>
+            <td>${cost.label}</td>
+            <td><span>${dollar(cost.value)}</span></td>
+        </tr>
     %endfor
     %if len(closeresult.principal) > 1:
-        <tr><th>Total</th><th><span>${dollar(closeresult.principal_total)}</span></th></tr>
+        <tr>
+            <th>Total</th>
+            <th><span>${dollar(closeresult.principal_total)}</span></th>
+        </tr>
     %endif
 </table>
 
-<h3>Down payment</h3>
+<h3>Cash required at closing</h3>
 <table>
-    %for cost in closeresult.downpayment:
-        <tr><th>${cost.label}</th><td><span>${dollar(cost.value)}</span></td></tr>
+    <tr>
+        <th>Description</th>
+        <th>Calculation</th>
+        <th>Amount</th>
+    </tr>
+    %for cost in closeresult.downpayment + closeresult.fees:
+        <tr>
+            <td>${cost.label}</td>
+            <td>${cost.calcstr}</td>
+            <td><span>${dollar(cost.value)}</span></td>
+        </tr>
     %endfor
-    %if len(closeresult.downpayment) > 1:
-        <tr><th>Total</th><th><span>${dollar(closeresult.downpayment_total)}</span></th></tr>
-    %endif
-</table>
-
-<h3>Misc/other fees at closing</h3>
-<table>
+    <!--
     %for cost in closeresult.fees:
-        <tr><th>${cost.label}</th><td><span>${dollar(cost.value)}</span></td></tr>
+        <tr>
+            <th>${cost.label}</th>
+            <td><span>${dollar(cost.value)}</span></td>
+        </tr>
     %endfor
-    <tr><th>Total</th><th><span>${dollar(closeresult.fees_total)}</span></th></tr>
+    -->
+    <tr>
+        <th colspan="2">Total</th>
+        <th><span>${dollar(closeresult.downpayment_total + closeresult.fees_total)}</span></th>
+    </tr>
 </table>
