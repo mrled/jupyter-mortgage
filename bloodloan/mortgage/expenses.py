@@ -59,7 +59,7 @@ def monthly_expenses(costs, saleprice, propvalue, boyprincipal, rent):
             raise NotImplementedError(
                 f"Cannot process a cost with a calctype of {cost.calctype}")
 
-        logger.info(f"Calculating monthy expense: {cost}")
+        # logger.info(f"Calculating monthy expense: {cost}")
         expenses.append(cost)
 
     return expenses
