@@ -77,13 +77,12 @@ class CloseResult:
             raise Exception(f"Unknown paytype {cost.paytype}")
 
 
-def close(saleprice, interestrate, loanterm, propertytaxes, costs):
+def close(saleprice, interestrate, loanterm, costs):
     """Calculate loan amount and closing costs
 
     saleprice       sale price for the property
     interestrate    interest rate for the loan
     loanterm        loan term in months
-    propertytaxes   estimated property taxes
     costs           list of costconfig.Cost objects
     """
 
@@ -111,12 +110,21 @@ def close(saleprice, interestrate, loanterm, propertytaxes, costs):
         # because any PRINCIPAL paytypes will affect their value
         if cost.calctype == costconfig.CostCalculationType.DOLLAR_AMOUNT:
             result.apply(cost)
-        if cost.calctype == costconfig.CostCalculationType.SALE_FRACTION:
+        if (
+                cost.calctype == costconfig.CostCalculationType.SALE_FRACTION or
+                cost.calctype == costconfig.CostCalculationType.VALUE_FRACTION):
+            # At closing, assume sale price == value
             cost.value = saleprice * cost.calc
             result.apply(cost)
-        elif cost.calctype == costconfig.CostCalculationType.PROPERTY_TAX_FRACTION:
-            cost.value = propertytaxes * cost.calc
-            result.apply(cost)
+
+    # Costs that have an identifier property may be used to calculate other costs
+    # Collect them for later reference
+    identifier_costs = {}
+    for cost in costs:
+        if cost.identifier is not None:
+            logger.info(f"Found a cost with an identifier: {cost.identifier}: {cost}")
+            current_value = identifier_costs.get(cost.identifier, 0)
+            identifier_costs[cost.identifier] = current_value + cost.value
 
     for cost in costs:
         # Now that we have calculated the other costs, including loan amount,
@@ -137,6 +145,11 @@ def close(saleprice, interestrate, loanterm, propertytaxes, costs):
                 interestrate, saleprice, result.principal_total, saleprice, loanterm)
             firstmonth = next(monthgen)
             cost.value = firstmonth.interestpmt * cost.calc
+            result.apply(cost)
+        elif cost.calctype == costconfig.CostCalculationType.PROPERTY_TAX_FRACTION:
+            logger.info("Calculating property taxes...")
+            property_taxes = identifier_costs.get(costconfig.CostIdentifier.PROPERTY_TAXES, 0)
+            cost.value = property_taxes * cost.calc
             result.apply(cost)
 
     return result

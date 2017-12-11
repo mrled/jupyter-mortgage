@@ -116,10 +116,10 @@ def toggleinputcells():
         '''))
 
 
-def wrap_close(saleprice, interestrate, loanterm, propertytaxes, closingcosts):
+def wrap_close(saleprice, interestrate, loanterm, closingcosts):
     """Show loan amounts and closing costs"""
     monthterm = loanterm * mmath.MONTHS_IN_YEAR
-    result = closing.close(saleprice, interestrate, monthterm, propertytaxes, closingcosts)
+    result = closing.close(saleprice, interestrate, monthterm, closingcosts)
     display(HTML(Templ.Close.render(closeresult=result)))
 
     return result
@@ -282,7 +282,6 @@ def propertyinfo(
         years,
         overpayment,
         appreciation,
-        propertytaxes,
         address,
         google_api_key,
         selected_cost_configs,
@@ -300,7 +299,6 @@ def propertyinfo(
     parameters.persist(ParameterIds.TERM, years)
     parameters.persist(ParameterIds.OVERPAYMENT, overpayment)
     parameters.persist(ParameterIds.APPRECIATION, appreciation)
-    parameters.persist(ParameterIds.PROPERTY_TAXES, propertytaxes)
     parameters.persist(ParameterIds.ADDRESS, address)
     parameters.persist(ParameterIds.GOOGLE_API_KEY, google_api_key)
     parameters.persist(ParameterIds.COSTS, selected_cost_configs)
@@ -317,7 +315,7 @@ def propertyinfo(
 
     costs = cost_configs.get(selected_cost_configs)
     logger.info(costs)
-    closed = wrap_close(saleprice, interestrate, years, propertytaxes, costs.closing)
+    closed = wrap_close(saleprice, interestrate, years, costs.closing)
 
     # TODO: currently assuming sale price is value; allow changing to something else
     months = wrap_schedule(
@@ -362,7 +360,6 @@ def main(worksheetdir):
         'years': params.term,
         'overpayment': params.overpayment,
         'appreciation': params.appreciation,
-        'propertytaxes': params.property_taxes,
         'address': params.address,
         'google_api_key': params.google_api_key,
         'selected_cost_configs': params.costs,

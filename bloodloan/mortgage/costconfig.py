@@ -67,6 +67,15 @@ class CostCalculationType(enum.Enum):
     CAPEX = 'capex'
 
 
+class CostIdentifier(enum.Enum):
+    """A way to keep track of types of costs
+
+    Some parts of the closing or expenses or schedule modules need to calculate costs in terms of other costs - for instance, a closing cost that requires paying some portion of property taxes into escrow. Costs that may be used this way can be assigned an identifier, which should be a member of this enum.
+    """
+
+    PROPERTY_TAXES = 'property taxes'
+
+
 class CapitalExpenditure():
     """A capital expenditure
 
@@ -115,6 +124,10 @@ class Cost():
                 should be a CostCalculationType
     paytype     how the payment is applied
                 should be a CostPaymentType
+    identifier  an optional CostIdentifier value
+                if present, this Cost can be used to calculate the value of other Cost instances
+                for instance, a property tax cost can be used to calculate a closing cost of a
+                certain number of months of property taxes to be paid into escrow
     """
 
     def __init__(
@@ -125,7 +138,8 @@ class Cost():
             calc=None,
             costtype=None,
             calctype=None,
-            paytype=None):
+            paytype=None,
+            identifier=None):
         """Initialize the object
 
         Note that there are mandatory fields which may be initialized either as a property of the
@@ -140,6 +154,7 @@ class Cost():
         costtype    mandatory
         calctype    optional; defaults to CostCalculationType.DOLLAR_AMOUNT
         paytype     optional; defaults to CostPaymentType.FEE
+        identifier  optional
         """
 
         dictionary = dictionary or {}
@@ -147,9 +162,14 @@ class Cost():
         if not isinstance(dictionary, dict):
             raise ValueError(f"dictionary was type {type(dictionary)} with value {dictionary}")
 
+
         self.label = label or dictionary['label']
         self.value = value or dictionary.get('value')
         self.calc = calc or dictionary.get('calc') or dictionary.get('calculation')
+        self.identifier = identifier or dictionary.get('identifier')
+        if self.identifier is not None:
+            logger.debug(f"Creating a cost called {self.label} with identifier {self.identifier}")
+            self.identifier = CostIdentifier(self.identifier)
         self.costtype = CostType(
             costtype or
             dictionary.get('costtype') or
@@ -187,6 +207,8 @@ class Cost():
             raise ValueError(f"Invalid value for calctype: '{self.calctype}'")
         if not isinstance(self.paytype, CostPaymentType):
             raise ValueError(f"Invalid value for paytype: '{self.paytype}'")
+        if self.identifier is not None and not isinstance(self.identifier, CostIdentifier):
+            raise ValueError(f"Invalid value for identifier: '{self.identifier}'")
 
         if self.calc and self.calctype in [CostCalculationType.DOLLAR_AMOUNT, None]:
             raise ValueError(f"Non-None calc value ({self.calc}) but DOLLAR_AMOUNT calctype")

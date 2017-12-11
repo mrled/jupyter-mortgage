@@ -1,5 +1,10 @@
 # TODO
 
+## WIP
+
+- Figure out how to get property taxes from just one place... right now the monthly and closing costs are in costconfigs, but it's also defined as a parameter so I can pass it to schedule(), and these values are not synced
+    - Might need to rearchitect entire costs system? I need to say "property taxes are X% of value", and let closing costs include calculations like "Y% of first year's property taxes"
+
 ## Basic feature and UX improvements
 
 - Denote additional one-time payments
@@ -11,7 +16,6 @@
 - Calculate some numbers for recommended reserve cash on hand - maybe start with a six-month recommendation (per TBORPI)
 - UI to show details on "house hack" type properties
 - Allow reloading cost configs without having to restart the Jupyter kernel
-- Figure out how to get property taxes from just one place... right now the monthly and closing costs are in costconfigs, but it's also defined as a parameter so I can pass it to schedule(), and these values are not synced
 
 ## Code cleanup tasks
 
