@@ -57,7 +57,7 @@ class Params:
         if self.persist_path:
 
             if not os.path.exists(self.persist_path):
-                logging.debug(f"The persisted values path {self.persist_path} did not exist")
+                logger.debug(f"The persisted values path {self.persist_path} did not exist")
                 persist_dir, _ = os.path.split(self.persist_path)
                 os.makedirs(persist_dir, exist_ok=True)
                 with open(self.persist_path, 'w') as ppfile:
@@ -67,12 +67,12 @@ class Params:
             with open(self.persist_path) as ppfile:
                 try:
                     persisted = yaml.load(ppfile)
-                    logging.debug(f"Loaded persisted data from {self.persist_path}: {persisted}")
+                    logger.debug(f"Loaded persisted data from {self.persist_path}: {persisted}")
                 except io.UnsupportedOperation as exc:
-                    logging.debug(f"Could not load persisted data from {self.persist_path}: {exc}")
+                    logger.debug(f"Could not load persisted data from {self.persist_path}: {exc}")
                     persisted = {}
             if persisted == {}:
-                with open(self.persis_path, 'w') as ppfile:
+                with open(self.persist_path, 'w') as ppfile:
                     ppfile.write(yaml.dump({}))
 
         logger.debug(f"When initializing parameters, found persisted values: {persisted}")
@@ -82,8 +82,6 @@ class Params:
             flex_flow='column',
             align_items='stretch',
             width='70%'))
-
-        myclass = ipywidgets.BoundedFloatText
 
         widgetmds = [
             ParamMetadata(
@@ -106,9 +104,6 @@ class Params:
                 ParameterIds.APPRECIATION, "Yearly appreciation",
                 ipywidgets.BoundedFloatText,
                 {'min': -20.0, 'max': 20.0, 'step': 0.5, 'value': 0.5}),
-            ParamMetadata(
-                ParameterIds.PROPERTY_TAXES, "Yearly property taxes",
-                ipywidgets.BoundedIntText, {'min': 0, 'max': 1_000_000, 'step': 25, 'value': 5500}),
             ParamMetadata(
                 ParameterIds.ADDRESS, "Property address",
                 ipywidgets.Textarea, {'value': ""}),
@@ -133,7 +128,6 @@ class Params:
                 logger.debug(f"Found persisted value '{value}' for {widgetmd.widgetid}")
             except KeyError:
                 logger.debug(f"Could not find persisted value for {widgetmd.widgetid}")
-                pass
             except Exception as exc:
                 raise Exception(f"Failure working with {widgetmd.widgetid}: {exc}")
 
