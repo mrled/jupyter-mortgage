@@ -116,42 +116,29 @@ def toggleinputcells():
         '''))
 
 
-def wrap_close(saleprice, interestrate, loanterm, closingcosts):
-    """Show loan amounts and closing costs"""
-    monthterm = loanterm * mmath.MONTHS_IN_YEAR
-    result = closing.close(saleprice, interestrate, monthterm, closingcosts)
-    display(HTML(Templ.Close.render(closeresult=result)))
-
-    return result
-
-
 def wrap_schedule(
         interestrate,
         value,
         principal,
-        saleprice,
-        years,
+        term,
         overpayment,
         appreciation,
-        monthlycosts,
-        rent):
-    """Show a loan's mortgage schedule in a Jupyter notebook"""
+        payments,
+        payments_noover,
+        ):
+    """Show a loan's mortgage schedule in a Jupyter notebook
 
-    term = years * mmath.MONTHS_IN_YEAR
-    overpayments = [overpayment for _ in range(term)]
+    interestrate        the interest rate as a decimal like 0.0375 (not percent like 3.75%)
+    value               value of the property
+    principal           principal of the loan
+    term                term of the loan in months
+    overpayment         amount added *each* month to all LoanPayment objects in the payments param
+    appreciation        how much the property is expecfted to appreciate per year as a decimal
+    payments            a list of LoanPayment objects with the monthly overpayment applied
+    payments_noover     a list of LoanPayment objects without the monthly overpayment applied
+    """
 
-    # Calculate the monthly payments for the mortgage schedule detail,
-    # yearly payments for the mortgage schedule summary
-    # and monthly payments with no overpayments for comparative analysis in prefacetempl
-    months = [month for month in schedule.schedule(
-        interestrate, value, principal, saleprice, term,
-        overpayments=overpayments, appreciation=appreciation, monthlycosts=monthlycosts,
-        monthlyrent=rent)]
-    months_no_over = [month for month in schedule.schedule(
-        interestrate, value, principal, saleprice, term,
-        overpayments=None, appreciation=appreciation,
-        monthlyrent=rent)]
-    years = [year for year in schedule.monthly2yearly_schedule(months)]
+    payments_year = [year for year in schedule.monthly2yearly_schedule(payments)]
 
     # Display a preface / summary first
     display(HTML(Templ.SchedulePreface.render(
@@ -160,8 +147,8 @@ def wrap_schedule(
         term=term,
         overpayment=overpayment,
         appreciation=appreciation,
-        monthlypayments=months,
-        monthlypayments_no_over=months_no_over)))
+        monthlypayments=payments,
+        monthlypayments_no_over=payments_noover)))
 
     # Create new Output objects, and call display(HTML(...)) in them
     # We do this because IPython.display.HTML() has nicer talbles
@@ -173,13 +160,13 @@ def wrap_schedule(
         display(HTML(Templ.Schedule.render(
             principal=principal,
             value=value,
-            loanpayments=years,
+            loanpayments=payments_year,
             paymentinterval_name="Year")))
     with detailout:
         display(HTML(Templ.Schedule.render(
             principal=principal,
             value=value,
-            loanpayments=months,
+            loanpayments=payments,
             paymentinterval_name="Month")))
 
     parentwidg = ipywidgets.Accordion()
@@ -187,18 +174,6 @@ def wrap_schedule(
     parentwidg.set_title(0, 'Yearly summary')
     parentwidg.set_title(1, 'Monthly detail')
     display(parentwidg)
-
-    return months
-
-
-def wrap_monthly_expense_breakdown(costs, rent, mortgagepmt):
-    """Show monthly expense breakdown
-
-    costs           list of monthly costs
-    rent            projected monthly rent
-    mortgagepmt     regular mortgage payment amount
-    """
-    display(HTML(Templ.MonthlyCosts.render(costs=costs, rent=rent, mortgagepmt=mortgagepmt)))
 
 
 def get_displayable_geocode(geocode, title):
@@ -307,22 +282,32 @@ def propertyinfo(
 
     interestrate = mmath.percent2decimal(interestrate)
     appreciation = mmath.percent2decimal(appreciation)
-
-    # TODO: split out display and calculation
-    #       We're getting values like the 'closed' and 'months' variables from functions that
-    #       also display data to the end user;
-    #       instead, we should calculated them all at once and then display the results
+    term = years * mmath.MONTHS_IN_YEAR
+    overpayments = [overpayment for _ in range(term)]
 
     costs = cost_configs.get(selected_cost_configs)
     logger.info(costs)
-    closed = wrap_close(saleprice, interestrate, years, costs.closing)
+    closed = closing.close(saleprice, interestrate, term, costs.closing)
+
+    display(HTML(Templ.Close.render(closeresult=closed)))
 
     # TODO: currently assuming sale price is value; allow changing to something else
-    months = wrap_schedule(
-        interestrate, saleprice, closed.principal_total, saleprice, years, overpayment,
-        appreciation, costs.monthly, rent)
+    months = [month for month in schedule.schedule(
+        interestrate, saleprice, closed.principal_total, saleprice, term,
+        overpayments=overpayments, appreciation=appreciation, monthlycosts=costs.monthly,
+        monthlyrent=rent)]
+    months_no_over = [month for month in schedule.schedule(
+        interestrate, saleprice, closed.principal_total, saleprice, term,
+        overpayments=None, appreciation=appreciation,
+        monthlyrent=rent)]
 
-    wrap_monthly_expense_breakdown(months[0].othercosts, rent, months[0].regularpmt)
+    # TODO: currently assuming sale price is value; allow changing to something else
+    wrap_schedule(
+        interestrate, saleprice, closed.principal_total, term, overpayment,
+        appreciation, months, months_no_over)
+
+    display(HTML(Templ.MonthlyCosts.render(
+        costs=months[0].othercosts, rent=rent, mortgagepmt=months[0].regularpmt)))
 
     if address != "":
         streetmap_container = ipywidgets.Box()
