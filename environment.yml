@@ -21,7 +21,8 @@ dependencies:
 
   # Useful in the repl...
   # Not sure why I need this since it's in the standard library?
-  - readline
+  # - readline
+  - pyreadline
 
   - pip:
 
@@ -36,4 +37,3 @@ dependencies:
     - namedtupled
     - pyyaml
     - yamlmagic
-
