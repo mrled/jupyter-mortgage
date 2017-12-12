@@ -4,6 +4,10 @@
 
 - Figure out how to get property taxes from just one place... right now the monthly and closing costs are in costconfigs, but it's also defined as a parameter so I can pass it to schedule(), and these values are not synced
     - Might need to rearchitect entire costs system? I need to say "property taxes are X% of value", and let closing costs include calculations like "Y% of first year's property taxes"
+    - Property tax: a monthly and closing cost, where closing cost is a fraction of the first year
+    - So we have to calculate the first year of property tax before we can calculate closing costs
+    - However, we have to calculate closing costs before we can calculate the schedule - because that's how we know the principal, and also it's where some stuff like part of FHA mortgage insurance, which affects the principal, gets calculated
+    - I think I need to calculate closing costs affecting principal, then calculate the whole mortgage payment schedule, then pa
 
 ## Basic feature and UX improvements
 
