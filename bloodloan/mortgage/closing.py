@@ -4,7 +4,6 @@ import copy
 import logging
 
 from bloodloan.mortgage import costconfig
-from bloodloan.mortgage import mmath
 from bloodloan.mortgage import schedule
 
 
@@ -14,22 +13,16 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 class CloseResult:
     """The result of a close() function call"""
 
-    def __init__(self, saleprice=0, downpayment=None, fees=None, principal=None):
-        self.saleprice = saleprice
-        self.downpayment = downpayment or []
-        self.fees = fees or []
-        self.principal = principal or []
-        self.principal.append(costconfig.Cost(
-            label="Sale price",
-            costtype=costconfig.CostType.CLOSING,
-            value=saleprice,
-            paytype=costconfig.CostPaymentType.PRINCIPAL))
+    def __init__(self):
+        self.downpayment = []
+        self.fees = []
+        self.principal = []
 
     def __str__(self):
-        return ", ".join([
-            f"<CloseResult: Price ${self.saleprice}",
-            f"Down ${self.downpayment_total} ({len(self.downpayment)})",
-            f"Fees ${self.fees_total} ({len(self.fees)})",
+        return " ".join([
+            f"<CloseResult:",
+            f"Down ${self.downpayment_total} ({len(self.downpayment)}),",
+            f"Fees ${self.fees_total} ({len(self.fees)}),",
             f"Principal ${self.principal_total} ({len(self.principal)})>",
         ])
 
@@ -48,7 +41,8 @@ class CloseResult:
         """Total principal"""
         return self.sum(self.principal)
 
-    def sum(self, costs):
+    @staticmethod
+    def sum(costs):
         """Sum up costs"""
         total = 0
         for cost in costs:
@@ -86,7 +80,13 @@ def close(saleprice, interestrate, loanterm, costs):
     costs           list of costconfig.Cost objects
     """
 
-    result = CloseResult(saleprice=saleprice)
+    result = CloseResult()
+
+    result.apply(costconfig.Cost(
+        label="Sale price",
+        costtype=costconfig.CostType.CLOSING,
+        value=saleprice,
+        paytype=costconfig.CostPaymentType.PRINCIPAL))
 
     # Don't modify costs we were passed, in case they are reused elsewhere
     costs = copy.deepcopy(costs)
@@ -141,9 +141,8 @@ def close(saleprice, interestrate, loanterm, costs):
             #       OK because we don't expect INTEREST_MONTHS to be many months long
             # 2)    Assumes saleprice == value
             #       OK for now but should be fixed at some point
-            monthgen = schedule.schedule(
-                interestrate, saleprice, result.principal_total, saleprice, loanterm)
-            firstmonth = next(monthgen)
+            firstmonth = next(schedule.schedule(
+                interestrate, saleprice, result.principal_total, saleprice, loanterm))
             cost.value = firstmonth.interestpmt * cost.calc
             result.apply(cost)
         elif cost.calctype == costconfig.CostCalculationType.PROPERTY_TAX_FRACTION:
