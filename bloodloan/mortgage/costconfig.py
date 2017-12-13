@@ -261,19 +261,16 @@ class CostConfiguration:
         """
         result = CostConfiguration(dictionary['label'])
         result.description = dictionary['description'] if 'description' in dictionary else ""
-        if 'closing' in dictionary:
-            for cost in dictionary['closing']:
-                result.closing.append(Cost(dictionary=cost, costtype=CostType.CLOSING))
-        if 'monthly' in dictionary:
-            for cost in dictionary['monthly']:
-                result.monthly.append(Cost(dictionary=cost, costtype=CostType.MONTHLY))
-        if 'capex' in dictionary:
-            for cost in dictionary['capex']:
-                result.monthly.append(Cost(
-                    label=cost['label'],
-                    costtype=CostType.MONTHLY,
-                    calc=CapitalExpenditure(cost),
-                    calctype=CostCalculationType.CAPEX))
+        for cost in dictionary.get('closing', []):
+            result.closing.append(Cost(dictionary=cost, costtype=CostType.CLOSING))
+        for cost in dictionary.get('monthly', []):
+            result.monthly.append(Cost(dictionary=cost, costtype=CostType.MONTHLY))
+        for cost in dictionary.get('capex', []):
+            result.monthly.append(Cost(
+                label=cost['label'],
+                costtype=CostType.MONTHLY,
+                calc=CapitalExpenditure(cost),
+                calctype=CostCalculationType.CAPEX))
         return result
 
 
