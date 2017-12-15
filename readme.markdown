@@ -51,6 +51,10 @@ Update the environment (e.g. if the prereqs change):
     # update the conda environment
     conda env update -f environment.yml
 
+Note that the `readline` package (on Posix systems) or the `pyreadline` package (on Windows systems) is really useful if you want to use the `MortgageWorksheet` environment interactively. Unfortunately, it's not possible to install `pyreadline` on Posix or `readline` on Windows, so there's not an easy way to add those packages to the environment.yml file. Instead, you can install them after the fact:
+
+    conda install --name MortgageWorksheet [readline|pyreadline]
+
 ### Other prerequisites
 
 By default, we use OpenStreetMap.org, which can be used without authentication. If you wish to use Google maps instead, you must procure a [Google Maps API key](https://console.developers.google.com/flows/enableapi?apiid=maps_backend,geocoding_backend,directions_backend,distance_matrix_backend,elevation_backend&keyType=CLIENT_SIDE&reusekey=true), and enter it in the appropriate field in the notebook.

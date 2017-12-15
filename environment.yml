@@ -19,11 +19,6 @@ dependencies:
   - googlemaps
   - widgetsnbextension
 
-  # Useful in the repl...
-  # Not sure why I need this since it's in the standard library?
-  # - readline
-  - pyreadline
-
   - pip:
 
     # Find the setup.py for bloodloan in this directory and install it
