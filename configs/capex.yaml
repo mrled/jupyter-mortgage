@@ -37,7 +37,7 @@ capex:
     cost: 3_000
     lifespan: 5
     source: hearsay
-  - label: Flooring
+  - label: Plumbing
     cost: 3_000
     lifespan: 30
     source: TBORPI
