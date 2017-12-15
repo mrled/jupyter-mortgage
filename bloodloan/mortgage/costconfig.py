@@ -3,6 +3,7 @@
 Code related to closing costs and monthly expenses
 """
 
+import copy
 import enum
 import logging
 import numbers
@@ -12,6 +13,7 @@ import re
 import yaml
 
 from bloodloan.mortgage import mmath
+from bloodloan.mortgage import schedule
 from bloodloan.ui import uiutil
 
 
@@ -274,6 +276,68 @@ class CostConfiguration:
         return result
 
 
+class CloseResult:
+    """The result of a CostConfigurationCollection.close() function call
+    """
+
+    def __init__(self):
+        self.downpayment = []
+        self.fees = []
+        self.principal = []
+
+    def __str__(self):
+        return " ".join([
+            f"<CloseResult:",
+            f"Down ${self.downpayment_total} ({len(self.downpayment)}),",
+            f"Fees ${self.fees_total} ({len(self.fees)}),",
+            f"Principal ${self.principal_total} ({len(self.principal)})>",
+        ])
+
+    @property
+    def downpayment_total(self):
+        """Total downpayment"""
+        return self.sum(self.downpayment)
+
+    @property
+    def fees_total(self):
+        """Total fees"""
+        return self.sum(self.fees)
+
+    @property
+    def principal_total(self):
+        """Total principal"""
+        return self.sum(self.principal)
+
+    @staticmethod
+    def sum(costs):
+        """Sum up costs"""
+        total = 0
+        for cost in costs:
+            total += cost.value
+        return total
+
+    def apply(self, cost):
+        """Apply a cost to closing"""
+        logger.info(f"Closing cost: {cost}")
+
+        if cost.paytype == CostPaymentType.PRINCIPAL:
+            self.principal.append(cost)
+
+        elif cost.paytype == CostPaymentType.DOWN_PAYMENT:
+            self.downpayment.append(cost)
+            self.principal.append(Cost(
+                label="Down payment",
+                costtype=CostType.CLOSING,
+                value=-cost.value,
+                paytype=CostPaymentType.PRINCIPAL))
+
+        elif cost.paytype == CostPaymentType.FEE:
+            self.fees.append(cost)
+
+        else:
+            raise Exception(f"Unknown paytype {cost.paytype}")
+
+
 class CostConfigurationCollection:
     """A collection of CostConfiguration objects
     """
@@ -318,6 +382,12 @@ class CostConfigurationCollection:
         return result
 
     @property
+    def costs(self):
+        """All costs from all configs
+        """
+        return self.closing + self.monthly
+
+    @property
     def closing(self):
         """All closing costs from all configs
         """
@@ -346,3 +416,134 @@ class CostConfigurationCollection:
         """
         return CostConfigurationCollection(
             configs=[cc for cc in self.configs if cc.label in labels])
+
+    def calculate(self, saleprice, propvalue, rent):
+        """Calculate the value property of all costs
+
+        saleprice       sale price of the property
+        propvalue       actual value of the property
+        rent            projected monthly rent for the property
+        """
+
+        # Complete list:
+        #
+        # DOLLAR_AMOUNT = 'amount'
+        # SALE_FRACTION = 'sale fraction'
+        # VALUE_FRACTION = 'value fraction'
+        # LOAN_FRACTION = 'loan fraction'
+        # YEARLY_PRINCIPAL_FRACTION = 'BOY remaining principal fraction'
+        # PROPERTY_TAX_FRACTION = 'yearly property tax fraction'
+        # MONTHLY_RENT_FRACTION = 'rent fraction'
+        # INTEREST_MONTHS = 'months of interest'
+        # CAPEX = 'capex'
+
+        # Delete all the ones we have handled:
+        #
+        # LOAN_FRACTION: need to know total principal, which was in the close() function
+        # YEARLY_PRINCIPAL_FRACTION: need to know *current* year's remaining principal, which we have to get from schedule()
+        # PROPERTY_TAX_FRACTION = need to know *current* year's property taxes, which means *current* year's property value
+        # INTEREST_MONTHS = need have the result of schedule() and can calculate any number of months of interest from there
+
+        for cost in self.costs:
+            # First, check our inputs
+            if cost.calctype == CostCalculationType.DOLLAR_AMOUNT and cost.value is None:
+                raise Exception(
+                    f"The {cost.label} MonthlyCost calctype is DOLLAR_AMOUNT, "
+                    "but with an empty value property")
+            elif (
+                    cost.calctype is not CostCalculationType.DOLLAR_AMOUNT and
+                    cost.calc is None):
+                raise Exception(
+                    f"The {cost.label} MonthlyCost calctype is {cost.calctype}, "
+                    "but with an empty calc property")
+
+            # Now we can calculate the following types of costs:
+            if cost.calctype is CostCalculationType.SALE_FRACTION:
+                cost.value = saleprice * cost.calc
+            elif cost.calctype is CostCalculationType.VALUE_FRACTION:
+                cost.value = propvalue * cost.calc
+            elif cost.calctype is CostCalculationType.MONTHLY_RENT_FRACTION:
+                cost.value = rent * cost.calc
+            elif cost.calctype is CostCalculationType.CAPEX:
+                cost.value = cost.calc.monthly
+
+    def close(self, saleprice, interestrate, loanterm):
+        """Calculate loan amount and closing costs
+
+        saleprice       sale price for the property
+        interestrate    interest rate for the loan
+        loanterm        loan term in months
+        """
+
+        result = CloseResult()
+
+        result.apply(Cost(
+            label="Sale price",
+            costtype=CostType.CLOSING,
+            value=saleprice,
+            paytype=CostPaymentType.PRINCIPAL))
+
+        # deepcopy costs in case they're being used elsewhere
+        costs = copy.deepcopy(self.closing)
+
+        # BEWARE!
+        # ORDER IS IMPORTANT AND SUBTLE!
+
+        for cost in costs:
+            # First, check our inputs
+            if cost.calctype == CostCalculationType.DOLLAR_AMOUNT and cost.value is None:
+                raise Exception(
+                    f"The {cost.label} Cost calctype is DOLLAR_AMOUNT, "
+                    "but with an empty value property")
+            elif cost.calctype != CostCalculationType.DOLLAR_AMOUNT and cost.calc is None:
+                raise Exception(
+                    f"The {cost.label} Cost calctype is {cost.calctype}, "
+                    "but with an empty calc property")
+
+            # Now calculate what can be calculated now
+            # Don't calculate LOAN_FRACTION or INTEREST_MONTHS calctypes here,
+            # because any PRINCIPAL paytypes will affect their value
+            if cost.calctype == CostCalculationType.DOLLAR_AMOUNT:
+                result.apply(cost)
+            if (
+                    cost.calctype == CostCalculationType.SALE_FRACTION or
+                    cost.calctype == CostCalculationType.VALUE_FRACTION):
+                # At closing, assume sale price == value
+                cost.value = saleprice * cost.calc
+                result.apply(cost)
+
+        # Costs that have an identifier property may be used to calculate other costs
+        # Collect them for later reference
+        identifier_costs = {}
+        for cost in costs:
+            if cost.identifier is not None:
+                logger.info(f"Found a cost with an identifier: {cost.identifier}: {cost}")
+                current_value = identifier_costs.get(cost.identifier, 0)
+                identifier_costs[cost.identifier] = current_value + cost.value
+
+        for cost in costs:
+            # Now that we have calculated the other costs, including loan amount,
+            # we can calculate LOAN_FRACTION or INTEREST_MONTHS calctypes
+            # Note that theoretically you could have something weird like a cost of
+            # calctype=LOAN_FRACTION paytype=PRINCIPAL,
+            # but that wouldn't make much sense so we don't really handle it here
+            if cost.calctype == CostCalculationType.LOAN_FRACTION:
+                cost.value = result.principal_total * cost.calc
+                result.apply(cost)
+            elif cost.calctype == CostCalculationType.INTEREST_MONTHS:
+                # TODO: Improve INTEREST_MONTHS closing cost calculation
+                # 1)    Assumes interest is the same in all months (not true)
+                #       OK because we don't expect INTEREST_MONTHS to be many months long
+                # 2)    Assumes saleprice == value
+                #       OK for now but should be fixed at some point
+                firstmonth = next(schedule.schedule(
+                    interestrate, saleprice, result.principal_total, saleprice, loanterm))
+                cost.value = firstmonth.interestpmt * cost.calc
+                result.apply(cost)
+            elif cost.calctype == CostCalculationType.PROPERTY_TAX_FRACTION:
+                logger.info("Calculating property taxes...")
+                property_taxes = identifier_costs.get(CostIdentifier.PROPERTY_TAXES, 0)
+                cost.value = property_taxes * cost.calc
+                result.apply(cost)
+
+        return result
