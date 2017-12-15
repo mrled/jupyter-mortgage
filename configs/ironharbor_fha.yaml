@@ -22,7 +22,7 @@ closing:
     calculation type: months of interest
     payment type: fee
   - label: Taxes escrow (3 months)
-    calculation: 0.25
+    calculation: 25%
     calculation type: yearly property tax fraction
     payment type: fee
 

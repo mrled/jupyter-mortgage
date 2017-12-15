@@ -47,7 +47,8 @@ class CostCalculationType(enum.Enum):
 
     DOLLAR_AMOUNT               a raw dollar amount
     SALE_FRACTION               a percentage of the sale price
-    VALUE_FRACTION              a percentage of the property's current value
+    VALUE_FRACTION              a percentage of the property's BOY value
+    MONTHLY_VALUE_FRACTION      a percentage of the property's BOY value, paid monthly
     LOAN_FRACTION               a percentage of the initial loan value
     YEARLY_PRINCIPAL_FRACTION   a percentage of the loan, calculated once per year, paid monthly
     PROPERTY_TAX_FRACTION       a percentage of the first year of property taxes
@@ -59,6 +60,7 @@ class CostCalculationType(enum.Enum):
     DOLLAR_AMOUNT = 'amount'
     SALE_FRACTION = 'sale fraction'
     VALUE_FRACTION = 'value fraction'
+    MONTHLY_VALUE_FRACTION = 'monthly value fraction'
     LOAN_FRACTION = 'loan fraction'
     YEARLY_PRINCIPAL_FRACTION = 'BOY remaining principal fraction'
     PROPERTY_TAX_FRACTION = 'yearly property tax fraction'

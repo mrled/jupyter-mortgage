@@ -1,45 +1,5 @@
 # TODO
 
-## WIP
-
-- Figure out how to get property taxes from just one place... right now the monthly and closing costs are in costconfigs, but it's also defined as a parameter so I can pass it to schedule(), and these values are not synced
-    - Might need to rearchitect entire costs system? I need to say "property taxes are X% of value", and let closing costs include calculations like "Y% of first year's property taxes"
-    - Property tax: a monthly and closing cost, where closing cost is a fraction of the first year
-    - So we have to calculate the first year of property tax before we can calculate closing costs
-    - However, we have to calculate closing costs before we can calculate the schedule - because that's how we know the principal, and also it's where some stuff like part of FHA mortgage insurance, which affects the principal, gets calculated
-    - I think I need to calculate closing costs affecting principal, then calculate the whole mortgage payment schedule, then calculate the rest of the closing costs?
-
-CalcTypes:
-
-- `DOLLAR_AMOUNT`: no work required
-- `SALE_FRACTION`: from input parameter
-- `VALUE_FRACTION`: from input parameter
-- `LOAN_FRACTION`:
-    - requires knowing total value of loan
-    - which requires calculating any closing cost with a paytype of `PRINCIPAL` or `DOWN_PAYMENT`
-- `YEARLY_PRINCIPAL_FRACTION`
-    - requires knowing remaining principal at beginning of current year
-    - which requires calculating a `schedule()`
-    - which requires `monthlycosts`: can be None when calculating this I think?
-    - but it also requires calculating all closing costs that affect the principal
-    - this means that a yearly principal fraction cannot affect loan principal or downpayment
-- `PROPERTY_TAX_FRACTION`:
-    - requires knowing current year's total property tax
-    - which requires knowing the property's value
-    - ... currently this is obtained from `schedule()`
-    - ... which calls `monthly_expenses()` to get its value...
-    - how to deal with this?
-    - `monthlycosts`: must include all property tax costs... TODO: REQUIRES MORE THOUGHT HERE
-- `MONTHLY_RENT_FRACTION`: from input parameter
-- `INTEREST_MONTHS`:
-    - requires knowing current year's total (projected, meaning not affected by overpayments) interst payments
-    - which requires calculating a `schedule()`
-    - `monthlycosts`: can be None when calculating this I think?
-- `CAPEX`: no work required
-
-WHOA HOLD ON WAIT: `LOAN_FRACTION` is just initial `YEARLY_PRINCIPAL_FRACTION`, combine these two
-
-
 ## Basic feature and UX improvements
 
 - Denote additional one-time payments
@@ -57,6 +17,7 @@ WHOA HOLD ON WAIT: `LOAN_FRACTION` is just initial `YEARLY_PRINCIPAL_FRACTION`, 
 - LoanPayment objects now track more than mere loan payments. Rename to something that makes sense.
 - It's wayyyyyy past time I should have tests on this shit
 - I have bloodloan.ui.uiutil and bloodloan.util modules... do something about that
+- `LOAN_FRACTION` is just initial `YEARLY_PRINCIPAL_FRACTION`, can we combine these two?
 
 ## Big / complex new features
 

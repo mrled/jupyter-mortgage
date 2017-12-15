@@ -287,7 +287,7 @@ def propertyinfo(
 
     costs = cost_configs.get(selected_cost_configs)
     logger.info(costs)
-    closed = closing.close(saleprice, interestrate, term, costs.closing)
+    closed = closing.close(saleprice, interestrate, term, costs.closing, costs.monthly)
 
     display(HTML(Templ.Close.render(closeresult=closed)))
 

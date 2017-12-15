@@ -51,13 +51,16 @@ def monthly_expenses(costs, saleprice, propvalue, boyprincipal, rent):
             cost.value = saleprice * cost.calc
         elif cost.calctype is costconfig.CostCalculationType.VALUE_FRACTION:
             cost.value = propvalue * cost.calc
+        elif cost.calctype is costconfig.CostCalculationType.MONTHLY_VALUE_FRACTION:
+            cost.value = propvalue * cost.calc / mmath.MONTHS_IN_YEAR
         elif cost.calctype is costconfig.CostCalculationType.MONTHLY_RENT_FRACTION:
             cost.value = rent * cost.calc
         elif cost.calctype is costconfig.CostCalculationType.CAPEX:
             cost.value = cost.calc.monthly
         else:
             raise NotImplementedError(
-                f"Cannot process a cost with a calctype of {cost.calctype}")
+                f"Cannot process the '{cost.label}' cost because it has a calctype of "
+                f"{cost.calctype}")
 
         # logger.info(f"Calculating monthy expense: {cost}")
         expenses.append(cost)
