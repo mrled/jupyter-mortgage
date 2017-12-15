@@ -15,7 +15,7 @@ closing:
     payment type: downpayment
   - label: Upfront FHA mortgage insurance
     calculation: 1.75%
-    calculation type: loan fraction
+    calculation type: value fraction
     payment type: principal
   - label: Prepaid interest (est 15 days)
     calculation: 0.5
