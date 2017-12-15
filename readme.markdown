@@ -55,6 +55,10 @@ Update the environment (e.g. if the prereqs change):
 
 By default, we use OpenStreetMap.org, which can be used without authentication. If you wish to use Google maps instead, you must procure a [Google Maps API key](https://console.developers.google.com/flows/enableapi?apiid=maps_backend,geocoding_backend,directions_backend,distance_matrix_backend,elevation_backend&keyType=CLIENT_SIDE&reusekey=true), and enter it in the appropriate field in the notebook.
 
+## Using the MorgageWorksheet Jupyter Notebook
+
+* You can reload the cost configurations just be re-running the parameters cell - no need to restart the Jupyter kernel
+
 ## Defining custom calculations
 
 Items like closing costs and monthly expenditures are highly variable.

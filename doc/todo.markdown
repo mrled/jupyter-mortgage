@@ -50,7 +50,6 @@ WHOA HOLD ON WAIT: `LOAN_FRACTION` is just initial `YEARLY_PRINCIPAL_FRACTION`, 
 - Show "percent rules" e.g. 1% rule or 3% rule or whatever - what percentage of total loan (or is it principal?) is monthly rent?
 - Calculate some numbers for recommended reserve cash on hand - maybe start with a six-month recommendation (per TBORPI)
 - UI to show details on "house hack" type properties
-- Allow reloading cost configs without having to restart the Jupyter kernel
 
 ## Code cleanup tasks
 
