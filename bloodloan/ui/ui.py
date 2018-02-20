@@ -306,8 +306,10 @@ def propertyinfo(
         interestrate, saleprice, closed.principal_total, term, overpayment,
         appreciation, months, months_no_over)
 
+    month0_capex = [c for c in months[0].othercosts if c.calctype == costconfig.CostCalculationType.CAPEX]
+    month0_cost = [c for c in months[0].othercosts if c.calctype != costconfig.CostCalculationType.CAPEX]
     display(HTML(Templ.MonthlyCosts.render(
-        costs=months[0].othercosts, rent=rent, mortgagepmt=months[0].regularpmt)))
+        costs=month0_cost, capexcosts=month0_capex, rent=rent, mortgagepmt=months[0].regularpmt)))
 
     if address != "":
         streetmap_container = ipywidgets.Box()

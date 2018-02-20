@@ -1,7 +1,13 @@
-<%page args="costs, rent, mortgagepmt" />
+<%page args="costs, capexcosts, rent, mortgagepmt" />
 
 <%!
 from bloodloan.ui.uiutil import dollar
+%>
+
+<%
+total_capex = sum([c.value for c in capexcosts])
+total_othercosts = sum([c.value for c in costs])
+cashflow = rent - mortgagepmt - total_capex - total_othercosts
 %>
 
 <h3>Monthly balance sheet</h3>
@@ -33,13 +39,27 @@ from bloodloan.ui.uiutil import dollar
     <td></td>
     <td>${dollar(mortgagepmt)}</td>
 </tr>
-
 <tr>
     <td>Projected monthly rent</td>
     <td>constant amount</td>
     <td>${dollar(rent)}</td>
     <td></td>
 </tr>
+<tr><td colspan="4"> </td></td>
+
+%for cost in capexcosts:
+    <tr>
+        <td>${cost.label}</td>
+        <td>${cost.calcstr}</td>
+        <td></td>
+        <td>${dollar(cost.value)}</td>
+    </tr>
+%endfor
+<tr>
+    <th colspan="2">CapEx total</th>
+    <th colspan="2">${dollar(total_capex)}</th>
+</tr>
+<tr><td colspan="4"> </td></td>
 
 %for cost in costs:
     <tr>
@@ -49,11 +69,11 @@ from bloodloan.ui.uiutil import dollar
         <td>${dollar(cost.value)}</td>
     </tr>
 %endfor
-
-<%
-total_costs = sum([c.value for c in costs])
-cashflow = rent - mortgagepmt - total_costs
-%>
+<tr>
+    <th colspan="2">Other costs total</th>
+    <th colspan="2">${dollar(total_othercosts)}</th>
+</tr>
+<tr><td colspan="4"> </td></td>
 
 <tr>
     <th colspan="2">Cashflow</th>
