@@ -1,5 +1,16 @@
 # TODO
 
+* Property taxes are inconsistent
+    * Only tracked in monthly costs if the `texas_property_tax_monthly` cost configuration is selected
+    * Used in closing costs based on hardcoded value? Or something.
+* Doesn't track insurance
+    * Insurance is calculated for closing costs
+    * Not calculated at all for monthly costs
+* Extremely slow
+    * I think there must be some O(N^2) bullshit going on, investigate
+* Adding new things to the UI is really confusing and happens in several places
+    * Need to either document this or fix it
+
 ## Basic feature and UX improvements
 
 - Denote additional one-time payments
