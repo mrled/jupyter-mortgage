@@ -105,6 +105,10 @@ class Params:
                 ipywidgets.BoundedFloatText,
                 {'min': -20.0, 'max': 20.0, 'step': 0.5, 'value': 0.5}),
             ParamMetadata(
+                ParameterIds.PROPERTY_TAXES, "Property taxes",
+                ipywidgets.BoundedFloatText,
+                {'min': 0.0, 'max': 10.0, 'step': 0.01, 'value': 1.81}),
+            ParamMetadata(
                 ParameterIds.ADDRESS, "Property address",
                 ipywidgets.Textarea, {'value': ""}),
             ParamMetadata(
