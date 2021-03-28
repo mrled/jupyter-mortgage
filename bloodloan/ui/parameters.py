@@ -86,7 +86,7 @@ class Params:
         widgetmds = [
             ParamMetadata(
                 ParameterIds.INTEREST_RATE, "Interest rate",
-                ipywidgets.BoundedFloatText, {'min': 0.25, 'step': 0.25, 'value': 3.75}),
+                ipywidgets.BoundedFloatText, {'min': 0.125, 'step': 0.125, 'value': 3.75}),
             ParamMetadata(
                 ParameterIds.SALE_PRICE, "Sale price",
                 ipywidgets.BoundedFloatText,
@@ -96,7 +96,7 @@ class Params:
                 ipywidgets.BoundedIntText, {'min': 0, 'max': 10_000, 'step': 25, 'value': 0}),
             ParamMetadata(
                 ParameterIds.TERM, "Loan term in years",
-                ipywidgets.Dropdown, {'options': [15, 20, 25, 30], 'value': 30}),
+                ipywidgets.BoundedIntText, {'min': 1, 'max': 50, 'step': 1, 'value': 30}),
             ParamMetadata(
                 ParameterIds.OVERPAYMENT, "Monthly overpayment amount",
                 ipywidgets.BoundedIntText, {'min': 0, 'max': 10_000, 'step': 25, 'value': 0}),
