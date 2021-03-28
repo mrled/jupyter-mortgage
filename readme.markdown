@@ -2,54 +2,34 @@
 
 It's a work-in-progress Jupyter notebook for mortgage calculations.
 
-You can use [Binder](https://mybinder.org/) to run this notebook online. No installation required!
-
-- `master` branch: [![master](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/mrled/jupyter-mortgage/master?filepath=MortgageWorksheet.ipynb)
-- `devel` branch: [![master](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/mrled/jupyter-mortgage/devel?filepath=MortgageWorksheet.ipynb)
-
 ## VH1's BEHIND THE REPO
 
 I told Josiah I was doing this:
 
-> Writing a mortgage calculator in a Jupyter notebook  
-> Which… might not be a great use of my time  
+> Writing a mortgage calculator in a Jupyter notebook
+> Which… might not be a great use of my time
 > But I decided it was more fun than learning the Excel macro language, so here we are
 
 He was not impressed:
 
-> I’m  
-> Um  
+> I’m
+> Um
 > It’s Friday night
 
 But still. Here we are.
 
 ## Requirements / installation
 
-I use [`conda`](https://conda.io/) to handle dependencies.
+I use Python 3.9
 
-Set up the environment the first time:
+```sh
+python3 -m venv venv
+. venv/bin/activate
+pip install -r requirements.txt
 
-    # create the conda environment
-    conda env create -f environment.yml
-
-Source the environment to run the notebook:
-
-    # activate the environment
-    # bash:
-    source activate MortgageWorksheet
-    # powershell:
-    activate.ps1 MortgageWorksheet
-
-    # run the notebook
-    jupyter notebook
-
-    # deactivate the environment when finished
-    deactivate
-
-Update the environment (e.g. if the prereqs change):
-
-    # update the conda environment
-    conda env update -f environment.yml
+# run the notebook
+jupyter notebook
+```
 
 ### Other prerequisites
 
