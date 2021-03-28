@@ -243,14 +243,14 @@ def get_displayable_geocode(geocode, title):
     return result
 
 
-def wrap_streetmap(address, google_api_key=None):
+def wrap_streetmap(address):
     """Show street maps and property information"""
 
-    if google_api_key:
-        mapper = streetmap.GoogleMapper(google_api_key)
-    else:
-        mapper = streetmap.OpenStreetMapper()
+    logger.debug("Instantiating mapper...")
+    mapper = streetmap.OpenStreetMapper()
+    logger.debug("Getting geocode...")
     geocodes = mapper.geocode(address)
+    logger.debug(f"Got geocode: {geocodes}")
 
     result = util.OutputChildren()
     result.display(util.html_hbox(f"Using {mapper} for maps", "info"))
@@ -284,7 +284,6 @@ def propertyinfo(
         appreciation,
         propertytaxes,
         address,
-        google_api_key,
         selected_cost_configs,
 
         # Other data passing:
@@ -302,7 +301,6 @@ def propertyinfo(
     parameters.persist(ParameterIds.APPRECIATION, appreciation)
     parameters.persist(ParameterIds.PROPERTY_TAXES, propertytaxes)
     parameters.persist(ParameterIds.ADDRESS, address)
-    parameters.persist(ParameterIds.GOOGLE_API_KEY, google_api_key)
     parameters.persist(ParameterIds.COSTS, selected_cost_configs)
 
     logger.info("Recalculating...")
@@ -326,14 +324,18 @@ def propertyinfo(
 
     wrap_monthly_expense_breakdown(months[0].othercosts, rent, months[0].regularpmt)
 
-    if address != "":
+    if address:
+        logger.debug(f"Mapping address of {address}")
         streetmap_container = ipywidgets.Box()
+        logger.debug("Running the street map executor...")
         street_map_executor.run(
             streetmap_container,
             "Loading maps...",
             wrap_streetmap,
-            action_args=(address, google_api_key))
+            action_args=(address))
         display(streetmap_container)
+    else:
+        logger.debug("No address to map")
 
 
 def main(worksheetdir):
@@ -364,7 +366,6 @@ def main(worksheetdir):
         'appreciation': params.appreciation,
         'propertytaxes': params.property_taxes,
         'address': params.address,
-        'google_api_key': params.google_api_key,
         'selected_cost_configs': params.costs,
 
         # Other data passing (must be fixed)

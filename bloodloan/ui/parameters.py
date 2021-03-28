@@ -40,7 +40,6 @@ class ParameterIds:
     APPRECIATION = 'appreciation'
     PROPERTY_TAXES = 'property_taxes'
     ADDRESS = 'address'
-    GOOGLE_API_KEY = 'google_api_key'
     COSTS = 'costs'
 
 
@@ -111,9 +110,6 @@ class Params:
             ParamMetadata(
                 ParameterIds.ADDRESS, "Property address",
                 ipywidgets.Textarea, {'value': ""}),
-            ParamMetadata(
-                ParameterIds.GOOGLE_API_KEY, "Google API key (optional)",
-                ipywidgets.Text, {'value': ""}),
             ParamMetadata(
                 ParameterIds.COSTS, "Cost configurations",
                 ipywidgets.SelectMultiple, {'options': cost_config_names, 'value': []}),

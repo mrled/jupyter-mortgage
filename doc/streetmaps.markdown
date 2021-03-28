@@ -1,6 +1,7 @@
 # Street map documentation
 
-I have used both Google Maps and OpenStreetMaps for map data
+I have used both Google Maps and OpenStreetMaps for map data.
+The Google Maps API changed, however, so support was removed.
 
 ## Reverse geocode searching with Nominatim
 
