@@ -285,7 +285,7 @@ class CostConfigurationCollection:
 
             with open(child) as cfile:
                 try:
-                    contents = yaml.load(cfile)
+                    contents = yaml.load(cfile, Loader=yaml.SafeLoader)
                 except yaml.parser.ParserError as exc:
                     logger.error(f"Error parsing config file {child}: {exc}")
                     continue

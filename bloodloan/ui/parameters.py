@@ -66,7 +66,7 @@ class Params:
 
             with open(self.persist_path) as ppfile:
                 try:
-                    persisted = yaml.load(ppfile)
+                    persisted = yaml.load(ppfile, Loader=yaml.UnsafeLoader)
                     logger.debug(f"Loaded persisted data from {self.persist_path}: {persisted}")
                 except io.UnsupportedOperation as exc:
                     logger.debug(f"Could not load persisted data from {self.persist_path}: {exc}")
@@ -161,7 +161,7 @@ class Params:
         logger.debug(f"Persisting {paramid} with value '{value}'")
 
         with open(self.persist_path) as ppfile:
-            persisted = yaml.load(ppfile)
+            persisted = yaml.load(ppfile, Loader=yaml.UnsafeLoader)
         persisted[paramid] = value
         with open(self.persist_path, 'w') as ppfile:
             ppfile.write(yaml.dump(persisted))
