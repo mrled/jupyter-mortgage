@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 def getlogconfig(
         notebookdir,
         logfile='log.txt',
-        fmt='%(levelname)s %(asctime)s %(filename)s:%(lineno)s:%(funcName)s(): %(message)s',
+        fmt='%(levelname)-.4s %(asctime)s %(filename)s:%(lineno)s:%(funcName)s(): %(message)s',
         datefmt='%Y%m%d-%H%M%S',
         maxbytes=10 * 1024 * 1024,  # 10MB
         backupcount=1,
