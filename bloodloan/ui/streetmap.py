@@ -3,12 +3,16 @@
 """Mapping functions"""
 
 import json
+import logging
 import urllib.parse
-import urllib.request
 
 import ipyleaflet
 
 import namedtupled
+import requests
+
+
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 class GeocodeResult():
@@ -64,8 +68,8 @@ class OpenStreetMapper(MapperInterface):
             "{0}",
             "?format=json&addressdetails=1&extratags=1&namedetails=1&dedupe=1"])
         uri = uritempl.format(urllib.parse.quote(address))
-        with urllib.request.urlopen(uri) as resulthandle:
-            httpresults = json.loads(resulthandle.read())
+        logger.debug(f"Attempting to get coordinates from URI {uri}")
+        httpresults = requests.get(uri).json()
         georesults = []
         for result in httpresults:
             try:

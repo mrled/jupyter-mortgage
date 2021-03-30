@@ -332,7 +332,7 @@ def propertyinfo(
             streetmap_container,
             "Loading maps...",
             wrap_streetmap,
-            action_args=(address))
+            action_args=(address,))
         display(streetmap_container)
     else:
         logger.debug("No address to map")
