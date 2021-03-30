@@ -11,6 +11,11 @@
 * Adding new things to the UI is really confusing and happens in several places
     * Need to either document this or fix it
 
+## Ease of use
+
+* Break out bloodloan into packages and publish them on pypi
+* Have example notebook in repo that shows how to use them and tutorial
+
 ## Basic feature and UX improvements
 
 - Denote additional one-time payments
